@@ -81,6 +81,11 @@ void main() {
     var WIDTH = window.innerWidth;
     var HEIGHT = window.innerHeight;
 
+    // can be local to init()
+    var vertices;
+    var values_size;
+    var values_color;
+
     init();
     animate();
 
@@ -98,10 +103,10 @@ void main() {
         uniforms = {
             amplitude: { type: "f", value: 1.0 },
             color:     { type: "c", value: new THREE.Color( 0xffffff ) },
-            texture:   { type: "t", value: THREE.ImageUtils.loadTexture( "../script/spark1.png" ) }
+            texture:   { type: "t", value: THREE.ImageUtils.loadTexture("../script/spark1.png") }
         };
 
-        var shaderMaterial = new THREE.ShaderMaterial( {
+        var shaderMaterial = new THREE.ShaderMaterial({
             uniforms: 		uniforms,
             attributes:     attributes,
             vertexShader:   document.getElementById( 'vertexshader' ).textContent,
@@ -125,51 +130,49 @@ void main() {
             geometry.vertices.push(vertex);
         }
 
-        sphere = new THREE.ParticleSystem( geometry, shaderMaterial );
-
+        sphere = new THREE.ParticleSystem(geometry, shaderMaterial);
         sphere.dynamic = true;
         //sphere.sortParticles = true;
 
-        var vertices = sphere.geometry.vertices;
-        var values_size = attributes.size.value;
-        var values_color = attributes.customColor.value;
+        vertices = sphere.geometry.vertices;
+        values_size = attributes.size.value;
+        values_color = attributes.customColor.value;
 
-        for( var v = 0; v < vertices.length; v++ ) {
-            values_size[ v ] = 10;
-            values_color[ v ] = new THREE.Color( 0xffaa00 );
+        for (var i = 0; i < vertices.length; i++) {
+            values_size[i] = 10;
+            values_color[i] = new THREE.Color(0xffaa00);
 
-            if ( vertices[ v ].x < 0 )
-                values_color[ v ].setHSL( 0.5 + 0.1 * ( v / vertices.length ), 0.7, 0.5 );
+            if (vertices[i].x < 0)
+                values_color[i].setHSL(0.5 + 0.1 * (i / vertices.length), 0.7, 0.5);
             else
-                values_color[ v ].setHSL( 0.0 + 0.1 * ( v / vertices.length ), 0.9, 0.5 );
+                values_color[i].setHSL(0.0 + 0.1 * (i / vertices.length), 0.9, 0.5);
         }
 
         scene.add(sphere);
 
-        renderer = new THREE.WebGLRenderer( { clearColor: 0x000000, clearAlpha: 1 } );
-        renderer.setSize( WIDTH, HEIGHT );
+        renderer = new THREE.WebGLRenderer({ clearColor: 0x000000, clearAlpha: 1 });
+        renderer.setSize(WIDTH, HEIGHT);
 
-        var container = document.getElementById( 'container' );
-        container.appendChild( renderer.domElement );
+        var container = document.getElementById('container');
+        container.appendChild(renderer.domElement);
 
         stats = new Stats();
         stats.domElement.style.position = 'absolute';
         stats.domElement.style.top = '0px';
-        container.appendChild( stats.domElement );
+        container.appendChild(stats.domElement);
 
-        window.addEventListener( 'resize', onWindowResize, false );
+        window.addEventListener('resize', onWindowResize, false);
     }
 
     function onWindowResize() {
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
 
-        renderer.setSize( window.innerWidth, window.innerHeight );
+        renderer.setSize(window.innerWidth, window.innerHeight);
     }
 
     function animate() {
-        requestAnimationFrame( animate );
-
+        requestAnimationFrame(animate);
         render();
         stats.update();
     }
@@ -178,12 +181,12 @@ void main() {
         var time = Date.now() * 0.005;
         sphere.rotation.z = 0.01 * time;
 
-        for( var i = 0; i < attributes.size.value.length; i++ ) {
-            attributes.size.value[ i ] = 14 + 13 * Math.sin( 0.1 * i + time );
+        for (var i = 0; i < attributes.size.value.length; i++) {
+            attributes.size.value[i] = 14 + 13 * Math.sin(0.1 * i + time);
         }
 
         attributes.size.needsUpdate = true;
-        renderer.render( scene, camera );
+        renderer.render(scene, camera);
     }
 
 </script>
