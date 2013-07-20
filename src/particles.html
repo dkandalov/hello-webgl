@@ -75,16 +75,11 @@ void main() {
     if (!Detector.webgl) Detector.addGetWebGLMessage();
 
     var renderer, scene, camera, stats;
-    var sphere, uniforms, attributes;
+    var sphere, attributes;
     var noise = [];
 
     var WIDTH = window.innerWidth;
     var HEIGHT = window.innerHeight;
-
-    // can be local to init()
-    var vertices;
-    var values_size;
-    var values_color;
 
     init();
     animate();
@@ -95,27 +90,32 @@ void main() {
 
         scene = new THREE.Scene();
 
-        attributes = {
-            size: {	type: 'f', value: [] },
-            customColor: { type: 'c', value: [] }
-        };
+        function createShaderMaterial() {
+            var attributes = {
+                size: {	type: 'f', value: [] },
+                customColor: { type: 'c', value: [] }
+            };
 
-        uniforms = {
-            amplitude: { type: "f", value: 1.0 },
-            color:     { type: "c", value: new THREE.Color( 0xffffff ) },
-            texture:   { type: "t", value: THREE.ImageUtils.loadTexture("../script/spark1.png") }
-        };
+            var uniforms = {
+                amplitude: { type: "f", value: 1.0 },
+                color:     { type: "c", value: new THREE.Color( 0xffffff ) },
+                texture:   { type: "t", value: THREE.ImageUtils.loadTexture("../script/spark1.png") }
+            };
 
-        var shaderMaterial = new THREE.ShaderMaterial({
-            uniforms: 		uniforms,
-            attributes:     attributes,
-            vertexShader:   document.getElementById( 'vertexshader' ).textContent,
-            fragmentShader: document.getElementById( 'fragmentshader' ).textContent,
+            var shaderMaterial = new THREE.ShaderMaterial({
+                uniforms: 		uniforms,
+                attributes:     attributes,
+                vertexShader:   document.getElementById( 'vertexshader' ).textContent,
+                fragmentShader: document.getElementById( 'fragmentshader' ).textContent,
 
-            blending: 		THREE.AdditiveBlending,
-            depthTest: 		false,
-            transparent:	true
-        });
+                blending: 		THREE.AdditiveBlending,
+                depthTest: 		false,
+                transparent:	true
+            });
+            return shaderMaterial;
+        }
+        var shaderMaterial = createShaderMaterial();
+        attributes = shaderMaterial.attributes;
 
         var radius = 200;
         var geometry = new THREE.Geometry();
@@ -134,9 +134,9 @@ void main() {
         sphere.dynamic = true;
         //sphere.sortParticles = true;
 
-        vertices = sphere.geometry.vertices;
-        values_size = attributes.size.value;
-        values_color = attributes.customColor.value;
+        var vertices = sphere.geometry.vertices;
+        var values_size = attributes.size.value;
+        var values_color = attributes.customColor.value;
 
         for (var i = 0; i < vertices.length; i++) {
             values_size[i] = 10;
