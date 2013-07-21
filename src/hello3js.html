@@ -21,10 +21,41 @@
 <!-- load the font file from canvas-text -->
 <script src="../script/helvetiker_regular.typeface.js"></script>
 
+<script type="x-shader/x-vertex" id="vertexshader">
+    uniform float amplitude;
+    attribute float size;
+    attribute vec3 customColor;
+
+    varying vec3 vColor;
+
+    void main() {
+    vColor = customColor;
+
+    vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
+
+    //gl_PointSize = size;
+    gl_PointSize = size * ( 300.0 / length( mvPosition.xyz ) );
+
+    gl_Position = projectionMatrix * mvPosition;
+    }
+</script>
+
+<script type="x-shader/x-fragment" id="fragmentshader">
+    uniform vec3 color;
+    uniform sampler2D texture;
+
+    varying vec3 vColor;
+
+    void main() {
+    gl_FragColor = vec4( color * vColor, 1.0 );
+    gl_FragColor = gl_FragColor * texture2D( texture, gl_PointCoord );
+    }
+</script>
+
 <script>
     var container, stats;
     var camera, scene, renderer;
-    var text, parent;
+    var parent;
 
     var targetRotation = 0;
     var targetRotationOnMouseDown = 0;
@@ -36,6 +67,59 @@
 
     init();
     animate();
+
+    function createShaderMaterial() {
+        var attributes = {
+            size: {	type: 'f', value: [] },
+            customColor: { type: 'c', value: [] }
+        };
+
+        var uniforms = {
+            amplitude: { type: "f", value: 1.0 },
+            color:     { type: "c", value: new THREE.Color( 0xffffff ) },
+            texture:   { type: "t", value: THREE.ImageUtils.loadTexture("../script/spark1.png") }
+        };
+
+        return new THREE.ShaderMaterial({
+            uniforms: uniforms,
+            attributes: attributes,
+            vertexShader: document.getElementById('vertexshader').textContent,
+            fragmentShader: document.getElementById('fragmentshader').textContent,
+
+            blending: THREE.AdditiveBlending,
+            depthTest: false,
+            transparent: true
+        });
+    }
+
+    function createTextMesh(text) {
+        var textMaterial = new THREE.LineBasicMaterial({ color: Math.random() * 0xffffff, overdraw: true });
+        var textGeometry = new THREE.TextGeometry(text, {
+            size: 80,
+            height: 20,
+            curveSegments: 4,
+            font: "helvetiker"
+        });
+        textGeometry.computeBoundingBox();
+
+        var textMesh = new THREE.Mesh(textGeometry, textMaterial);
+        textMesh.position.y = 100;
+        textMesh.position.z = 0;
+        return textMesh;
+    }
+
+    function vertexIndexInGeometry(index, face) {
+        var indexToLetter = ['a', 'b', 'c', 'd'];
+        return face[indexToLetter[index]];
+    }
+    function findVertex(index, face, geometry) {
+        var vertexIndex = vertexIndexInGeometry(index, face);
+        return geometry.vertices[vertexIndex];
+    }
+    function numberOfVertices(face) {
+        return (face instanceof THREE.Face3) ? 3 : 4;
+    }
+
 
     function init() {
         container = document.createElement('div');
@@ -52,37 +136,34 @@
         camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 1000);
         camera.position.set(0, 150, 500);
 
-        scene = new THREE.Scene();
+        var text = createTextMesh("Hello aaa");
+        text.position.x = -0.5 * (text.geometry.boundingBox.max.x - text.geometry.boundingBox.min.x);
 
-        var theText = "Hello aaa";
-        var hash = document.location.hash.substr(1);
-        if (hash.length !== 0) {
-            theText = hash;
-        }
-
-        var text3d = new THREE.TextGeometry(theText, {
-            size: 80,
-            height: 20,
-            curveSegments: 2,
-            font: "helvetiker"
+        var max = null;
+        text.geometry.faces.forEach(function(face) {
+            for (var i = 0; i < numberOfVertices(face); i++) {
+                var vertex = findVertex(i, face, text.geometry);
+                if (max == null || vertex.x > max.x) {
+                    max = vertex;
+                }
+                var radius = 200;
+                face.vertexColors[i] = new THREE.Color(0xffffff);//.setHSL(0.0, (vertex.y / radius + 1) / 2, 0.5);
+            }
         });
-        text3d.computeBoundingBox();
-        var centerOffset = -0.5 * (text3d.boundingBox.max.x - text3d.boundingBox.min.x);
-
-        var textMaterial = new THREE.MeshBasicMaterial({ color: Math.random() * 0xffffff, overdraw: true });
-        text = new THREE.Mesh(text3d, textMaterial);
-        text.position.x = centerOffset;
-        text.position.y = 100;
-        text.position.z = 0;
-        text.rotation.x = 0;
-        text.rotation.y = Math.PI * 2;
+        var data = THREE.FontUtils.drawText("Hello aaa");
+        console.log(data.offset);
+        console.log(max); // TODO for some reason this is not the same as data.offset
+        var text2 = createTextMesh("!!!");
+        text2.position.x = data.offset;
 
         parent = new THREE.Object3D();
         parent.add(text);
+        parent.add(text2);
 
+        scene = new THREE.Scene();
         scene.add(parent);
 
-        renderer = new THREE.CanvasRenderer();
+        renderer = new THREE.WebGLRenderer({ clearColor: 0x000000, clearAlpha: 1 });
         renderer.setSize(window.innerWidth, window.innerHeight);
 
         container.appendChild(renderer.domElement);
@@ -125,13 +206,13 @@
         targetRotation = targetRotationOnMouseDown + (mouseX - mouseXOnMouseDown) * 0.02;
     }
 
-    function onDocumentMouseUp(event) {
+    function onDocumentMouseUp() {
         document.removeEventListener('mousemove', onDocumentMouseMove, false);
         document.removeEventListener('mouseup', onDocumentMouseUp, false);
         document.removeEventListener('mouseout', onDocumentMouseOut, false);
     }
 
-    function onDocumentMouseOut(event) {
+    function onDocumentMouseOut() {
         document.removeEventListener('mousemove', onDocumentMouseMove, false);
         document.removeEventListener('mouseup', onDocumentMouseUp, false);
         document.removeEventListener('mouseout', onDocumentMouseOut, false);
