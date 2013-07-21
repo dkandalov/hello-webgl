@@ -100,17 +100,16 @@ void main() {
                 texture:   { type: "t", value: THREE.ImageUtils.loadTexture("../script/spark1.png") }
             };
 
-            var shaderMaterial = new THREE.ShaderMaterial({
-                uniforms: 		uniforms,
-                attributes:     attributes,
-                vertexShader:   document.getElementById( 'vertexshader' ).textContent,
-                fragmentShader: document.getElementById( 'fragmentshader' ).textContent,
+            return new THREE.ShaderMaterial({
+                uniforms: uniforms,
+                attributes: attributes,
+                vertexShader: document.getElementById('vertexshader').textContent,
+                fragmentShader: document.getElementById('fragmentshader').textContent,
 
-                blending: 		THREE.AdditiveBlending,
-                depthTest: 		false,
-                transparent:	true
+                blending: THREE.AdditiveBlending,
+                depthTest: false,
+                transparent: true
             });
-            return shaderMaterial;
         }
         var shaderMaterial = createShaderMaterial();
 

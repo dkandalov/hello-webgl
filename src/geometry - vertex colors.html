@@ -109,12 +109,12 @@
             var vertexIndex = vertexIndexInGeometry(index, face);
             return geometry.vertices[vertexIndex];
         }
-        function numberOfVertixes(face) {
+        function numberOfVertices(face) {
             return (face instanceof THREE.Face3) ? 3 : 4;
         }
 
         geometry.faces.forEach(function(face) {
-            for (var i = 0; i < numberOfVertixes(face); i++) {
+            for (var i = 0; i < numberOfVertices(face); i++) {
                 var vertex = findVertex(i, face, geometry);
                 var color = new THREE.Color(0xffffff).setHSL((vertex.y / radius + 1) / 2, 1.0, 0.5);
 
@@ -122,7 +122,7 @@
             }
         });
         geometry2.faces.forEach(function(face) {
-            for (var i = 0; i < numberOfVertixes(face); i++) {
+            for (var i = 0; i < numberOfVertices(face); i++) {
                 var vertex = findVertex(i, face, geometry2);
                 var color = new THREE.Color(0xffffff).setHSL(0.0, (vertex.y / radius + 1) / 2, 0.5);
 
@@ -130,7 +130,7 @@
             }
         });
         geometry3.faces.forEach(function(face) {
-            for (var i = 0; i < numberOfVertixes(face); i++) {
+            for (var i = 0; i < numberOfVertices(face); i++) {
                 var vertexIndex = vertexIndexInGeometry(i, face);
                 var color = new THREE.Color(0xffffff).setHSL(0.125 * vertexIndex / geometry.vertices.length, 1.0, 0.5);
 
