@@ -53,6 +53,19 @@
 </script>
 
 <script>
+    function Text3d(text) {
+        this.text = text;
+        this.parameters = {
+            size: 80,
+            height: 20,
+            curveSegments: 4,
+            font: "helvetiker"
+        };
+        this.mesh = createTextMesh(text, this.parameters);
+        this.position = this.mesh.position;
+        this.width = this.mesh.geometry.boundingBox.max.x - this.mesh.geometry.boundingBox.min.x;
+    }
+
     var container, stats;
     var camera, scene, renderer;
     var parent;
@@ -118,27 +131,19 @@
         camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 1000);
         camera.position.set(0, 150, 500);
 
-        var parameters = {
-            size: 80,
-            height: 20,
-            curveSegments: 4,
-            font: "helvetiker"
-        };
-        var text = createTextMesh("Hello aaa", parameters);
-        var textWidth = (text.geometry.boundingBox.max.x - text.geometry.boundingBox.min.x);
-        text.position.x = -0.5 * textWidth;
+        var text = new Text3d("Hello");
+        text.position.x = -0.5 * text.width;
 
-        var text2 = createTextMesh("!!!", parameters);
-        var text2Width = (text2.geometry.boundingBox.max.x - text2.geometry.boundingBox.min.x);
-        text2.position.x = text.position.x + textWidth + 10;
+        var text2 = new Text3d("--");
+        text2.position.x = text.position.x + text.width + 10;
 
-        var text3 = createTextMesh("00000", parameters);
-        text3.position.x = text2.position.x + text2Width + 10;
+        var text3 = new Text3d("!!");
+        text3.position.x = text2.position.x + text2.width + 10;
 
         parent = new THREE.Object3D();
-        parent.add(text);
-        parent.add(text2);
-        parent.add(text3);
+        parent.add(text.mesh);
+        parent.add(text2.mesh);
+        parent.add(text3.mesh);
 
         scene = new THREE.Scene();
         scene.add(parent);
