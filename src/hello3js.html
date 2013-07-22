@@ -81,39 +81,27 @@
     init();
     animate();
 
-    function createShaderMaterial() {
-        var attributes = {
-            size: {	type: 'f', value: [] },
-            customColor: { type: 'c', value: [] }
-        };
-
-        var uniforms = {
-            amplitude: { type: "f", value: 1.0 },
-            color:     { type: "c", value: new THREE.Color( 0xffffff ) },
-            texture:   { type: "t", value: THREE.ImageUtils.loadTexture("../script/spark1.png") }
-        };
-
-        return new THREE.ShaderMaterial({
-            uniforms: uniforms,
-            attributes: attributes,
-            vertexShader: document.getElementById('vertexshader').textContent,
-            fragmentShader: document.getElementById('fragmentshader').textContent,
-
-            blending: THREE.AdditiveBlending,
-            depthTest: false,
-            transparent: true
-        });
-    }
-
-    function createTextMesh(text, parameters) {
-        var textMaterial = new THREE.LineBasicMaterial({ color: Math.random() * 0xffffff, overdraw: true });
-        var textGeometry = new THREE.TextGeometry(text, parameters);
+    function createTextMesh(text, textParameters) {
+        var textMaterial = new THREE.LineBasicMaterial();
+        var textGeometry = new THREE.TextGeometry(text, textParameters);
         textGeometry.computeBoundingBox();
 
         var textMesh = new THREE.Mesh(textGeometry, textMaterial);
         textMesh.position.y = 100;
         textMesh.position.z = 0;
         return textMesh;
+    }
+
+    function randomMaterial() {
+        return new THREE.LineBasicMaterial({
+            color: Math.random() * 0xffffff,
+            overdraw: true
+        });
+    }
+    function sumOf(values, callback) {
+        var sum = 0;
+        values.forEach(function(it) { sum += callback(it); });
+        return sum;
     }
 
     function init() {
@@ -131,19 +119,24 @@
         camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 1000);
         camera.position.set(0, 150, 500);
 
-        var text = new Text3d("Hello");
-        text.position.x = -0.5 * text.width;
-
-        var text2 = new Text3d("--");
-        text2.position.x = text.position.x + text.width + 10;
-
-        var text3 = new Text3d("!!");
-        text3.position.x = text2.position.x + text2.width + 10;
+        var text = "This is a ^*&%";
+        var letters3d = text.split("").map(function(letter) {
+                    var letter3d = (letter == " " ? new Text3d("-") : new Text3d(letter));
+                    letter3d.mesh.material = randomMaterial();
+                    if (letter == " ") letter3d.mesh.material.visible = false;
+                    return letter3d;
+                });
+        var letterSpacing = 10;
+        var position = -0.5 * (sumOf(letters3d, function(it){ return it.width; }) + letterSpacing * letters3d.length);
+        letters3d.forEach(function(letter) {
+            letter.position.x = position;
+            position += letter.width + letterSpacing;
+        });
 
         parent = new THREE.Object3D();
-        parent.add(text.mesh);
-        parent.add(text2.mesh);
-        parent.add(text3.mesh);
+        letters3d.forEach(function(it) {
+            parent.add(it.mesh);
+        });
 
         scene = new THREE.Scene();
         scene.add(parent);
