@@ -61,8 +61,8 @@
         scene.add(light);
 
         var loader = new THREE.JSONLoader();
-        loader.load("../script/cubecolors.js", createScene1);
-        loader.load("../script/cube_fvc.js", createScene2);
+        loader.load("../script/cubecolors.json", createScene1);
+        loader.load("../script/cube_fvc.json", createScene2);
 
         renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
