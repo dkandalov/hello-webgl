@@ -66,7 +66,7 @@
         this.width = this.mesh.geometry.boundingBox.max.x - this.mesh.geometry.boundingBox.min.x;
     }
 
-    var container, stats;
+    var stats;
     var camera, scene, renderer;
     var parent;
 
@@ -79,7 +79,6 @@
     var windowHalfY = window.innerHeight / 2;
 
     init();
-    animate();
 
     function createTextMesh(text, textParameters) {
         var textMaterial = new THREE.LineBasicMaterial();
@@ -104,22 +103,31 @@
         return sum;
     }
 
-    function init() {
-        container = document.createElement('div');
-        document.body.appendChild(container);
-
+    function createInfoElement() {
         var info = document.createElement('div');
         info.style.position = 'absolute';
         info.style.top = '10px';
         info.style.width = '100%';
         info.style.textAlign = 'center';
         info.innerHTML = 'Simple Dynamic 3D Text Example by <a href="http://www.lab4games.net/zz85/blog">zz85</a><br/>Drag to spin the text';
-        container.appendChild(info);
+        return info;
+    }
+
+    function createStats() {
+        var stats = new Stats();
+        stats.domElement.style.position = 'absolute';
+        stats.domElement.style.top = '0px';
+        return stats;
+    }
+    function init() {
+        var container = document.createElement('div');
+        document.body.appendChild(container);
+        container.appendChild(createInfoElement());
 
         camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 1000);
         camera.position.set(0, 150, 500);
 
-        var text = "This is a ^*&%";
+        var text = "This is a @*&%";
         var letters3d = text.split("").map(function(letter) {
                     var letter3d = (letter == " " ? new Text3d("-") : new Text3d(letter));
                     letter3d.mesh.material = randomMaterial();
@@ -146,16 +154,15 @@
 
         container.appendChild(renderer.domElement);
 
-        stats = new Stats();
-        stats.domElement.style.position = 'absolute';
-        stats.domElement.style.top = '0px';
+        stats = createStats();
         container.appendChild(stats.domElement);
 
         document.addEventListener('mousedown', onDocumentMouseDown, false);
         document.addEventListener('touchstart', onDocumentTouchStart, false);
         document.addEventListener('touchmove', onDocumentTouchMove, false);
-
         window.addEventListener('resize', onWindowResize, false);
+
+        animate();
     }
 
     function onWindowResize() {
