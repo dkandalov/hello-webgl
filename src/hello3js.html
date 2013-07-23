@@ -56,7 +56,7 @@
     function Text3d(text) {
         this.text = text;
         this.parameters = {
-            size: 80,
+            size: 60,
             height: 20,
             curveSegments: 4,
             font: "helvetiker"
@@ -66,9 +66,10 @@
         this.width = this.mesh.geometry.boundingBox.max.x - this.mesh.geometry.boundingBox.min.x;
     }
 
-    var stats;
     var camera, scene, renderer;
-    var root;
+    var root, letters3d;
+    var stats;
+    var lastUpdateTime = Date.now();
 
     var targetRotation = 0;
     var targetRotationOnMouseDown = 0;
@@ -91,9 +92,15 @@
         return textMesh;
     }
 
+    function randomElement(array) {
+        var n = Math.random();
+        var chunk = 1.0 / array.length;
+        return array[Math.floor(n / chunk)];
+    }
     function randomMaterial() {
+        var colors = [0x9E0142, 0xD53E4F, 0xD53E4F, 0xFDAE61, 0xFEE08B, 0xFFFFBF, 0xE6F598, 0xABDDA4, 0x66C2A5, 0x3288BD, 0x5E4FA2];
         return new THREE.LineBasicMaterial({
-            color: Math.random() * 0xffffff,
+            color: randomElement(colors),
             overdraw: true
         });
     }
@@ -145,7 +152,7 @@
         camera.position.set(0, 150, 500);
 
         var text = "This is a @*&%";
-        var letters3d = create3dLetters(text);
+        letters3d = create3dLetters(text);
 
         root = new THREE.Object3D();
         letters3d.forEach(function(it){ root.add(it.mesh); });
@@ -229,7 +236,23 @@
         stats.update();
     }
 
+    var index = 0;
     function render() {
+        var now = Date.now();
+        var frequency = 250;
+        if (now - lastUpdateTime > frequency) {
+            lastUpdateTime = (Math.floor(now / frequency) + 1) * frequency;
+            var it = letters3d[index++];
+            it.mesh.material = randomMaterial();
+            if (it.text == "-") it.mesh.material.visible = false;
+
+            if (Math.random() < 0.2) {
+                it.mesh.position.z = 10;
+            } else {
+                it.mesh.position.z = 0;
+            }
+            index = index % letters3d.length;
+        }
         root.rotation.y += (targetRotation - root.rotation.y) * 0.05;
         renderer.render(scene, camera);
     }
