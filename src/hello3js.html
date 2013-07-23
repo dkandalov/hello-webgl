@@ -68,7 +68,7 @@
 
     var stats;
     var camera, scene, renderer;
-    var parent;
+    var root;
 
     var targetRotation = 0;
     var targetRotationOnMouseDown = 0;
@@ -119,6 +119,23 @@
         stats.domElement.style.top = '0px';
         return stats;
     }
+
+    function create3dLetters(text) {
+        var letters3d = text.split("").map(function(letter) {
+            var letter3d = (letter == " " ? new Text3d("-") : new Text3d(letter));
+            letter3d.mesh.material = randomMaterial();
+            if (letter == " ") letter3d.mesh.material.visible = false;
+            return letter3d;
+        });
+        var letterSpacing = 10;
+        var position = -0.5 * (sumOf(letters3d, function(it){ return it.width; }) + letterSpacing * letters3d.length);
+        letters3d.forEach(function(letter) {
+            letter.position.x = position;
+            position += letter.width + letterSpacing;
+        });
+        return letters3d;
+    }
+
     function init() {
         var container = document.createElement('div');
         document.body.appendChild(container);
@@ -128,26 +145,13 @@
         camera.position.set(0, 150, 500);
 
         var text = "This is a @*&%";
-        var letters3d = text.split("").map(function(letter) {
-                    var letter3d = (letter == " " ? new Text3d("-") : new Text3d(letter));
-                    letter3d.mesh.material = randomMaterial();
-                    if (letter == " ") letter3d.mesh.material.visible = false;
-                    return letter3d;
-                });
-        var letterSpacing = 10;
-        var position = -0.5 * (sumOf(letters3d, function(it){ return it.width; }) + letterSpacing * letters3d.length);
-        letters3d.forEach(function(letter) {
-            letter.position.x = position;
-            position += letter.width + letterSpacing;
-        });
+        var letters3d = create3dLetters(text);
 
-        parent = new THREE.Object3D();
-        letters3d.forEach(function(it) {
-            parent.add(it.mesh);
-        });
+        root = new THREE.Object3D();
+        letters3d.forEach(function(it){ root.add(it.mesh); });
 
         scene = new THREE.Scene();
-        scene.add(parent);
+        scene.add(root);
 
         renderer = new THREE.WebGLRenderer({ clearColor: 0x000000, clearAlpha: 1 });
         renderer.setSize(window.innerWidth, window.innerHeight);
@@ -226,7 +230,7 @@
     }
 
     function render() {
-        parent.rotation.y += (targetRotation - parent.rotation.y) * 0.05;
+        root.rotation.y += (targetRotation - root.rotation.y) * 0.05;
         renderer.render(scene, camera);
     }
 
