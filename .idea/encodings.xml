@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="Encoding" useUTFGuessing="true" native2AsciiForPropertiesFiles="false">
+    <file url="file://$PROJECT_DIR$/src/enterprise-snowflakes/sprites/abstractClass@2x.png" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/enterprise-snowflakes/sprites/antInstallation@2x_dark.png" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/enterprise-snowflakes/sprites/class.png" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/enterprise-snowflakes/sprites/debug@2x_dark.png" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/enterprise-snowflakes/sprites/disabledDebug@2x_dark.png" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/enterprise-snowflakes/sprites/ejb@2x.png" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/enterprise-snowflakes/sprites/ejbClass.png" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/enterprise-snowflakes/sprites/error_notifications@2x.png" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/enterprise-snowflakes/sprites/exceptionClass@2x.png" charset="UTF-8" />

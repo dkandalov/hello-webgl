@@ -1,11 +1,8 @@
 if !Detector.webgl then Detector.addGetWebGLMessage()
 
-stats = null
-
-camera = null
-scene = null
-renderer = null
+stage = null
 particles = []
+stats = null
 
 class ParticleSystem
   constructor: (@index, @config) ->
@@ -46,18 +43,54 @@ class ParticleSystem
     @material.color.setHSL(h, color[1], color[2])
 
 
+class Stage
+  constructor: ->
+    @camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 2000)
+    @camera.position.z = 1000
+
+    @scene = new THREE.Scene()
+    @scene.fog = new THREE.FogExp2(0x000000, 0.0012)
+
+    @renderer = new THREE.WebGLRenderer()
+    @renderer.setClearColor(0x000000, 1)
+    @renderer.setSize(window.innerWidth, window.innerHeight)
+
+    @mouseX = 0
+    @mouseY = 0
+
+  appendTo: (container) ->
+    container.appendChild(@renderer.domElement)
+
+  onWindowSizeChange: (window) ->
+    @windowHalfX = window.innerWidth / 2
+    @windowHalfY = window.innerHeight / 2
+
+    @camera.aspect = window.innerWidth / window.innerHeight
+    @camera.updateProjectionMatrix()
+    @renderer.setSize(window.innerWidth, window.innerHeight)
+
+  onNewMousePosition: (x, y) ->
+    @mouseX = x - @windowHalfX
+    @mouseY = y - @windowHalfY
+
+  render: ->
+    @camera.position.x += (@mouseX - @camera.position.x) * 0.05
+    @camera.position.y += (-@mouseY - @camera.position.y) * 0.05
+    @camera.lookAt(@scene.position)
+
+    @renderer.render(@scene, @camera)
+
+
+
 init = (showStats = false) ->
-  container = document.createElement('div')
-  document.body.appendChild(container)
+  rootContainer = document.createElement('div')
+  document.body.appendChild(rootContainer)
 
-  camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 2000)
-  camera.position.z = 1000
-
-  scene = new THREE.Scene()
-  scene.fog = new THREE.FogExp2(0x000000, 0.0012)
+  stage = new Stage()
 
   parameters = [
-    [[1.0, 0.2, 0.5], "sprites/class.png", 20, 1.5, 7000],
+    [[1.0, 0.2, 0.5], "sprites/class.png", 20, 1.5, 6000],
+    [[1.0, 0.2, 0.5], "sprites/abstractClass@2x.png", 20, 1.5, 1000],
     [[0.95, 0.1, 0.5], "sprites/method.png", 15, 2, 7000],
     [[0.90, 0.05, 0.5], "sprites/interface.png", 10, 2, 5000],
     [[0.85, 0, 0.5], "sprites/testError.png", 8, 4, 3000],
@@ -69,87 +102,48 @@ init = (showStats = false) ->
     [[0.60, 0, 0.5], "sprites/antInstallation@2x_dark.png", 10, 2, 300],
     [[0.60, 0, 0.4], "sprites/xsdFile@2x.png", 15, 0.4, 400],
     [[0.60, 0, 0.4], "sprites/ejbClass.png", 10, 1, 400],
+    [[0.60, 0, 0.4], "sprites/ejb@2x.png", 10, 1, 400],
     [[0.60, 0, 0.4], "sprites/home.png", 10, 1, 400],
   ]
 
   for i in [0...parameters.length]
     do ->
       particleSystem = new ParticleSystem(i, parameters[i])
-      particleSystem.addTo(scene)
+      particleSystem.addTo(stage.scene)
       particles.push(particleSystem)
-
-  renderer = new THREE.WebGLRenderer()
-  renderer.setClearColor(0x000000, 1)
-  renderer.setSize(window.innerWidth, window.innerHeight)
-  container.appendChild(renderer.domElement)
 
   if showStats
     stats = new Stats()
     stats.domElement.style.position = 'absolute'
     stats.domElement.style.top = '0px'
-    container.appendChild(stats.domElement)
+    rootContainer.appendChild(stats.domElement)
 
-  windowState =
-    halfX: window.innerWidth / 2,
-    halfY: window.innerHeight / 2,
-    mouseX: 0,
-    mouseY: 0
+  stage.appendTo(rootContainer)
+  stage.onWindowSizeChange(window)
 
-  document.addEventListener('mousemove', ((event) -> onDocumentMouseMove(windowState, event)), false)
-  document.addEventListener('touchstart', ((event) -> onDocumentTouchStart(windowState, event)), false)
-  document.addEventListener('touchmove', ((event) -> onDocumentTouchMove(windowState, event)), false)
-  window.addEventListener('resize', (-> onWindowResize(windowState)), false)
+  onDocumentTouch = (event) ->
+    if event.touches.length == 1
+      event.preventDefault()
+      stage.onNewMousePosition(event.touches[0].pageX, event.touches[0].pageY)
 
-  windowState
-
-
-onWindowResize = (windowState) ->
-  windowState.halfX = window.innerWidth / 2
-  windowState.halfY = window.innerHeight / 2
-
-  camera.aspect = window.innerWidth / window.innerHeight
-  camera.updateProjectionMatrix()
-  renderer.setSize(window.innerWidth, window.innerHeight)
+  document.addEventListener('touchstart', onDocumentTouch, false)
+  document.addEventListener('touchmove', onDocumentTouch, false)
+  document.addEventListener('mousemove', ((event) -> stage.onNewMousePosition(event.clientX, event.clientY)), false)
+  window.addEventListener('resize', (-> stage.onWindowSizeChange(window)), false)
 
 
-onDocumentMouseMove = (windowState, event) ->
-  windowState.mouseX = event.clientX - windowState.halfX
-  windowState.mouseY = event.clientY - windowState.halfY
+animate = ->
+  requestAnimationFrame(animate)
 
+  time = Date.now()
+  for particleSystem in particles
+    particleSystem.animate(time)
 
-onDocumentTouchStart = (windowState, event) ->
-  if event.touches.length == 1
-    event.preventDefault()
-    windowState.mouseX = event.touches[0].pageX - windowState.halfX
-    windowState.mouseY = event.touches[0].pageY - windowState.halfY
+  stage.render()
 
-
-onDocumentTouchMove = (windowState, event) ->
-  if event.touches.length == 1
-    event.preventDefault()
-    windowState.mouseX = event.touches[0].pageX - windowState.halfX
-    windowState.mouseY = event.touches[0].pageY - windowState.halfY
-
-
-animate = (windowState) ->
-  requestAnimationFrame(-> animate(windowState))
-  render(windowState)
   if stats != null
     stats.update()
 
 
-render = (windowState) ->
-  time = Date.now()
-
-  camera.position.x += (windowState.mouseX - camera.position.x) * 0.05
-  camera.position.y += (-windowState.mouseY - camera.position.y) * 0.05
-  camera.lookAt(scene.position)
-
-  for particleSystem in particles
-    particleSystem.animate(time)
-
-  renderer.render(scene, camera)
-
-
-windowState = init()
-animate(windowState)
+init()
+animate()
