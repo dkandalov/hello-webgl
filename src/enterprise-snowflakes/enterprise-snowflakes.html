@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<!-- saved from url=(0056)http://threejs.org/examples/webgl_particles_sprites.html -->
 <html lang="en">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
@@ -30,11 +29,18 @@
         }
     </style>
 </head>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+<script src="//connect.soundcloud.com/sdk.js"></script>
 <body>
+<script>
+    SC.initialize({ client_id: "7610eda2763bfef89923ae412a291e61" });
+    SC.stream("/tracks/1120390", function(sound){ sound.play(); }); // https://soundcloud.com/ninja-tune/jaga-jazzist-book-of-glass-edit
+</script>
 <div id="info">
     Snowflakes Enterprise Edition
     <br/>
-    (originally <a href="http://threejs.org/" target="_blank">three.js</a> webgl particle sprites example by René Descartes)
+    (originally <a href="http://threejs.org/examples/webgl_particles_sprites.html" target="_blank">three.js example</a> by René Descartes;
+    music by <a href="http://www.jagajazzist.com/" target="_blank">Jaga Jazzist</a>)
 </div>
 
 <script src="../../script/three.js"></script>
