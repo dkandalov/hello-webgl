@@ -1,23 +1,12 @@
 if !Detector.webgl then Detector.addGetWebGLMessage()
 
-container = null
 stats = null
+
 camera = null
 scene = null
 renderer = null
-particles = null
-geometry = null
 materials = []
 parameters = null
-h = null
-color = null
-sprite = null
-size  = null
-mouseX = 0
-mouseY = 0
-
-windowHalfX = window.innerWidth / 2
-windowHalfY = window.innerHeight / 2
 
 
 init = ->
@@ -40,9 +29,9 @@ init = ->
 
   sprite1 = THREE.ImageUtils.loadTexture("sprites/interface.png")
   sprite2 = THREE.ImageUtils.loadTexture("sprites/class.png")
-  sprite3 = THREE.ImageUtils.loadTexture("sprites/function.png")
-  sprite4 = THREE.ImageUtils.loadTexture("sprites/ideaModule.png")
-  sprite5 = THREE.ImageUtils.loadTexture("sprites/method.png")
+  sprite3 = THREE.ImageUtils.loadTexture("sprites/method.png")
+  sprite4 = THREE.ImageUtils.loadTexture("sprites/sourceFolder.png")
+  sprite5 = THREE.ImageUtils.loadTexture("sprites/testError.png")
   parameters = [
     [[1.0, 0.2, 0.5], sprite2, 20],
     [[0.95, 0.1, 0.5], sprite3, 15],
@@ -68,7 +57,6 @@ init = ->
       materials[i].color.setHSL(color[0], color[1], color[2])
 
       particles = new THREE.ParticleSystem(geometry, materials[i])
-
       particles.rotation.x = Math.random() * 6
       particles.rotation.y = Math.random() * 6
       particles.rotation.z = Math.random() * 6
@@ -84,15 +72,23 @@ init = ->
   stats.domElement.style.top = '0px'
   container.appendChild(stats.domElement)
 
-  document.addEventListener('mousemove', onDocumentMouseMove, false)
-  document.addEventListener('touchstart', onDocumentTouchStart, false)
-  document.addEventListener('touchmove', onDocumentTouchMove, false)
-  window.addEventListener('resize', onWindowResize, false)
+  windowState =
+    halfX: window.innerWidth / 2,
+    halfY: window.innerHeight / 2,
+    mouseX: 0,
+    mouseY: 0
+
+  document.addEventListener('mousemove', ((event) -> onDocumentMouseMove(windowState, event)), false)
+  document.addEventListener('touchstart', ((event) -> onDocumentTouchStart(windowState, event)), false)
+  document.addEventListener('touchmove', ((event) -> onDocumentTouchMove(windowState, event)), false)
+  window.addEventListener('resize', (-> onWindowResize(windowState)), false)
+
+  windowState
 
 
-onWindowResize = ->
-  windowHalfX = window.innerWidth / 2
-  windowHalfY = window.innerHeight / 2
+onWindowResize = (windowState) ->
+  windowState.halfX = window.innerWidth / 2
+  windowState.halfY = window.innerHeight / 2
 
   camera.aspect = window.innerWidth / window.innerHeight
   camera.updateProjectionMatrix()
@@ -100,36 +96,36 @@ onWindowResize = ->
   renderer.setSize(window.innerWidth, window.innerHeight)
 
 
-onDocumentMouseMove = (event) ->
-  mouseX = event.clientX - windowHalfX
-  mouseY = event.clientY - windowHalfY
+onDocumentMouseMove = (windowState, event) ->
+  windowState.mouseX = event.clientX - windowState.halfX
+  windowState.mouseY = event.clientY - windowState.halfY
 
 
-onDocumentTouchStart = (event) ->
+onDocumentTouchStart = (windowState, event) ->
   if event.touches.length == 1
     event.preventDefault()
-    mouseX = event.touches[ 0 ].pageX - windowHalfX
-    mouseY = event.touches[ 0 ].pageY - windowHalfY
+    windowState.mouseX = event.touches[0].pageX - windowState.halfX
+    windowState.mouseY = event.touches[0].pageY - windowState.halfY
 
 
-onDocumentTouchMove = (event) ->
+onDocumentTouchMove = (windowState, event) ->
   if event.touches.length == 1
     event.preventDefault()
-    mouseX = event.touches[ 0 ].pageX - windowHalfX
-    mouseY = event.touches[ 0 ].pageY - windowHalfY
+    windowState.mouseX = event.touches[0].pageX - windowState.halfX
+    windowState.mouseY = event.touches[0].pageY - windowState.halfY
 
 
-animate = ->
-  requestAnimationFrame(animate)
-  render()
+animate = (windowState) ->
+  requestAnimationFrame(-> animate(windowState))
+  render(windowState)
   stats.update()
 
 
-render = ->
+render = (windowState) ->
   time = Date.now() * 0.00005
 
-  camera.position.x += (mouseX - camera.position.x) * 0.05
-  camera.position.y += (-mouseY - camera.position.y) * 0.05
+  camera.position.x += (windowState.mouseX - camera.position.x) * 0.05
+  camera.position.y += (-windowState.mouseY - camera.position.y) * 0.05
   camera.lookAt(scene.position)
 
   for i in [0...scene.children.length]
@@ -145,5 +141,5 @@ render = ->
   renderer.render(scene, camera)
 
 
-init()
-animate()
+windowState = init()
+animate(windowState)
