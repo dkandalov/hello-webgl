@@ -1,5 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="Encoding" useUTFGuessing="true" native2AsciiForPropertiesFiles="false" />
+  <component name="Encoding" useUTFGuessing="true" native2AsciiForPropertiesFiles="false">
+    <file url="file://$PROJECT_DIR$/src/enterprise-snowflakes/sprites/class.png" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/enterprise-snowflakes/sprites/function.png" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/enterprise-snowflakes/sprites/icon.png" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/enterprise-snowflakes/sprites/ideaModule.png" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/enterprise-snowflakes/sprites/interface.png" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/enterprise-snowflakes/sprites/method.png" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/sprites/class.png" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/sprites/function.png" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/sprites/icon.png" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/sprites/ideaModule.png" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/sprites/interface.png" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/sprites/java.png" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/sprites/method.png" charset="UTF-8" />
+  </component>
 </project>
 
