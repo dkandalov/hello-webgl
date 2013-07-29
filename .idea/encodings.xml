@@ -5,28 +5,17 @@
     <file url="file://$PROJECT_DIR$/src/enterprise-snowflakes/sprites/antInstallation@2x_dark.png" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/enterprise-snowflakes/sprites/class.png" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/enterprise-snowflakes/sprites/debug@2x_dark.png" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/src/enterprise-snowflakes/sprites/disabledDebug@2x_dark.png" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/enterprise-snowflakes/sprites/ejb@2x.png" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/enterprise-snowflakes/sprites/ejbClass.png" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/enterprise-snowflakes/sprites/error_notifications@2x.png" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/enterprise-snowflakes/sprites/exceptionClass@2x.png" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/src/enterprise-snowflakes/sprites/function.png" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/enterprise-snowflakes/sprites/home.png" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/src/enterprise-snowflakes/sprites/icon.png" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/src/enterprise-snowflakes/sprites/ideaModule.png" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/enterprise-snowflakes/sprites/interface.png" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/enterprise-snowflakes/sprites/method.png" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/enterprise-snowflakes/sprites/sourceFolder.png" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/enterprise-snowflakes/sprites/testError.png" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/enterprise-snowflakes/sprites/warning@2x.png" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/enterprise-snowflakes/sprites/xsdFile@2x.png" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/src/sprites/class.png" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/src/sprites/function.png" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/src/sprites/icon.png" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/src/sprites/ideaModule.png" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/src/sprites/interface.png" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/src/sprites/java.png" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/src/sprites/method.png" charset="UTF-8" />
   </component>
 </project>
 
