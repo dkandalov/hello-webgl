@@ -7,31 +7,21 @@
  * - WebGL port by @supereggbert
  * http://www.glge.org/demos/fxaa/
  */
-
 THREE.FXAAShader = {
-
 	uniforms: {
-
-		"tDiffuse":   { type: "t", value: null },
-		"resolution": { type: "v2", value: new THREE.Vector2( 1 / 1024, 1 / 512 )  }
-
+		"tDiffuse": { type: "t", value: null },
+		"resolution": { type: "v2", value: new THREE.Vector2(1 / 1024, 1 / 512)  }
 	},
 
 	vertexShader: [
-
 		"varying vec2 vUv;",
-
 		"void main() {",
-
 			"vUv = uv;",
 			"gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );",
-
 		"}"
-
 	].join("\n"),
 
 	fragmentShader: [
-
 		"uniform sampler2D tDiffuse;",
 		"uniform vec2 resolution;",
 
@@ -42,7 +32,6 @@ THREE.FXAAShader = {
 		"#define FXAA_SPAN_MAX     8.0",
 
 		"void main() {",
-
 			"vec3 rgbNW = texture2D( tDiffuse, ( gl_FragCoord.xy + vec2( -1.0, -1.0 ) ) * resolution ).xyz;",
 			"vec3 rgbNE = texture2D( tDiffuse, ( gl_FragCoord.xy + vec2( 1.0, -1.0 ) ) * resolution ).xyz;",
 			"vec3 rgbSW = texture2D( tDiffuse, ( gl_FragCoord.xy + vec2( -1.0, 1.0 ) ) * resolution ).xyz;",
@@ -69,8 +58,8 @@ THREE.FXAAShader = {
 
 			"float rcpDirMin = 1.0 / ( min( abs( dir.x ), abs( dir.y ) ) + dirReduce );",
 			"dir = min( vec2( FXAA_SPAN_MAX,  FXAA_SPAN_MAX),",
-				  "max( vec2(-FXAA_SPAN_MAX, -FXAA_SPAN_MAX),",
-						"dir * rcpDirMin)) * resolution;",
+			"max( vec2(-FXAA_SPAN_MAX, -FXAA_SPAN_MAX),",
+			"dir * rcpDirMin)) * resolution;",
 
 			"vec3 rgbA = texture2D( tDiffuse, gl_FragCoord.xy  * resolution + dir * ( 1.0 / 3.0 - 0.5 ) ).xyz;",
 			"rgbA += texture2D( tDiffuse, gl_FragCoord.xy  * resolution + dir * ( 2.0 / 3.0 - 0.5 ) ).xyz;",
@@ -84,17 +73,11 @@ THREE.FXAAShader = {
 			"float lumaB = dot( rgbB, luma );",
 
 			"if ( ( lumaB < lumaMin ) || ( lumaB > lumaMax ) ) {",
-
 				"gl_FragColor = vec4( rgbA, opacity );",
-
 			"} else {",
-
 				"gl_FragColor = vec4( rgbB, opacity );",
-
 			"}",
-
 		"}"
-
 	].join("\n")
 
 };
