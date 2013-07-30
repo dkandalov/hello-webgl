@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <!-- saved from url=(0063)http://www.mrdoob.com/lab/javascript/effects/fire/01/index.html -->
 <html lang="en">
-<head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <script src="../script/bmi.js" language="javascript"></script>
-    <meta charset="utf-8"><meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <title>Fire - 01</title>
     <style type="text/css">
         body {
@@ -11,14 +12,13 @@
             margin: 0px;
             overflow: hidden;
         }
-
         #info {
             position: absolute;
             top: 0px;
             width: 100%;
             color: #f06000;
             padding: 5px;
-            font-family: Monospace;
+            font-family: Monospace,serif;
             font-size: 13px;
             text-align: center;
         }
@@ -26,22 +26,29 @@
 </head>
 <body>
 <div id="container"></div>
-<div id="info">Click/Touch to create flames.</div><script type="text/javascript">
-    var QUALITY = 6,
-        WIDTH = Math.floor(window.innerWidth / QUALITY), HEIGHT = Math.floor(window.innerHeight / QUALITY), SIZE = WIDTH * HEIGHT,
-        context, image, data,
-        buffer1, buffer2, turbulence,
-        isUserInteracting, pointers, count = 0;
+<div id="info">Click/Touch to create flames.</div>
+<script type="text/javascript">
+    var QUALITY = 6;
+    var WIDTH = Math.floor(window.innerWidth / QUALITY);
+    var HEIGHT = Math.floor(window.innerHeight / QUALITY);
+    var SIZE = WIDTH * HEIGHT;
+
+    var context;
+    var image;
+    var buffer1;
+    var buffer2;
+    var turbulence;
+    var isUserInteracting;
+    var pointers;
+    var count = 0;
 
     init();
     setInterval(loop, 1000 / 60);
 
     function init() {
-        var container, canvas;
+        var container = document.getElementById('container');
 
-        container = document.getElementById('container');
-
-        canvas = document.createElement("canvas");
+        var canvas = document.createElement("canvas");
         canvas.width = WIDTH;
         canvas.height = HEIGHT;
         canvas.style.width = window.innerWidth + "px";
@@ -52,78 +59,57 @@
         context.fillStyle = "rgb(0, 0, 0)";
         context.fillRect(0, 0, WIDTH, HEIGHT);
         image = context.getImageData(0, 0, WIDTH, HEIGHT);
-        data = image.data;
 
         buffer1 = [];
         buffer2 = [];
         turbulence = [];
 
         for (var i = 0; i < SIZE + WIDTH; i++) {
-
             buffer1[i] = 0;
             buffer2[i] = 0;
             turbulence[i] = Math.random();
         }
 
-        document.addEventListener('mousedown', onDocumentMouseDown, false);
-        document.addEventListener('mousemove', onDocumentMouseMove, false);
-        document.addEventListener('mouseup', onDocumentMouseUp, false);
-        document.addEventListener('mouseout', onDocumentMouseOut, false);
 
-        document.addEventListener('touchstart', onDocumentTouchStart, false);
-        document.addEventListener('touchmove', onDocumentTouchMove, false);
-        document.addEventListener('touchend', onDocumentTouchEnd, false);
-    }
+        document.addEventListener('mousedown', function(event) {
+            event.preventDefault();
+            isUserInteracting = true;
+            pointers = [[event.clientX / QUALITY, event.clientY / QUALITY]];
+        }, false);
 
-    function onDocumentMouseDown(event) {
-        event.preventDefault();
+        document.addEventListener('mousemove', function (event) {
+            pointers = [[event.clientX / QUALITY, event.clientY / QUALITY]];
+        }, false);
 
-        isUserInteracting = true;
+        document.addEventListener('mouseup', function(){ isUserInteracting = false; }, false);
+        document.addEventListener('mouseout', function(){ isUserInteracting = false; }, false);
 
-        pointers = [
-            [event.clientX / QUALITY, event.clientY / QUALITY]
-        ];
-    }
+        document.addEventListener('touchstart', function (event) {
+            isUserInteracting = true;
+            event.preventDefault();
+            pointers = [];
 
-    function onDocumentMouseMove(event) {
-        pointers = [
-            [event.clientX / QUALITY, event.clientY / QUALITY]
-        ];
-    }
+            for (var i = 0; i < event.touches.length; i++) {
+                pointers.push([event.touches[i].pageX / QUALITY, event.touches[i].pageY / QUALITY]);
+            }
+        }, false);
 
-    function onDocumentMouseUp(event) {
-        isUserInteracting = false;
-    }
+        document.addEventListener('touchmove', function (event) {
+            event.preventDefault();
+            pointers = [];
+            for (var i = 0; i < event.touches.length; i++) {
+                pointers.push([event.touches[i].pageX / QUALITY, event.touches[i].pageY / QUALITY]);
+            }
+        }, false);
 
-    function onDocumentMouseOut(event) {
-        isUserInteracting = false;
-    }
-
-    function onDocumentTouchStart(event) {
-        isUserInteracting = true;
-        event.preventDefault();
-        pointers = [];
-
-        for (var i = 0; i < event.touches.length; i++) {
-            pointers.push([event.touches[i].pageX / QUALITY, event.touches[i].pageY / QUALITY]);
-        }
-    }
-
-    function onDocumentTouchMove(event) {
-        event.preventDefault();
-        pointers = [];
-        for (var i = 0; i < event.touches.length; i++) {
-            pointers.push([event.touches[i].pageX / QUALITY, event.touches[i].pageY / QUALITY]);
-        }
-    }
-
-    function onDocumentTouchEnd(event) {
-        event.preventDefault();
-        isUserInteracting = false;
+        document.addEventListener('touchend', function (event) {
+            event.preventDefault();
+            isUserInteracting = false;
+        }, false);
     }
 
     function emit(x, y) {
-        buffer1[ Math.floor(x) + (Math.floor(y) * WIDTH)] = 1000;
+        buffer1[Math.floor(x) + (Math.floor(y) * WIDTH)] = 1000;
     }
 
     function loop() {
@@ -138,15 +124,13 @@
             emit(Math.random() * WIDTH, HEIGHT);
         }
 
-        var i4, pixel;
         for (var i = WIDTH; i < SIZE; i++) {
-            i4 = i * 4;
+            var i4 = i * 4;
+            var pixel = buffer2[i] = ((buffer1[i - 1] + buffer1[i + 1]) * .235) + (buffer1[i + WIDTH] * turbulence[(i + count) % SIZE]);
 
-            pixel = buffer2[i] = ((buffer1[i - 1] + buffer1[i + 1]) * .235) + (buffer1[i + WIDTH] * turbulence[(i + count) % SIZE]);
-
-            data[ i4 ] = Math.min(255, pixel << 3);
-            data[ i4 + 1 ] = Math.min(255, pixel);
-            data[ i4 + 2 ] = Math.min(255, pixel >> 1);
+            image.data[ i4 ] = Math.min(255, pixel << 3);
+            image.data[ i4 + 1 ] = Math.min(255, pixel);
+            image.data[ i4 + 2 ] = Math.min(255, pixel >> 1);
         }
 
         buffer1 = buffer2.slice(0);
@@ -154,6 +138,5 @@
         count += Math.floor(Math.random() * SIZE);
     }
 </script>
-<script language="javascript"><!--
-bmi_SafeAddOnload(bmi_load,"bmi_orig_img",0);//-->
-</script></body></html>
+</body>
+</html>
