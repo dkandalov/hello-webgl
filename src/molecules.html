@@ -79,10 +79,10 @@
     </style>
 </head>
 <body>
-<script src="./ molecules_files/three.min.js"></script>
-<script src="./ molecules_files/TrackballControls.js"></script>
-<script src="./ molecules_files/CSS3DRenderer.js"></script>
-<script src="./ molecules_files/PDBLoader.js"></script>
+<script src="./molecules_files/three.min.js"></script>
+<script src="./molecules_files/TrackballControls.js"></script>
+<script src="./molecules_files/CSS3DRenderer.js"></script>
+<script src="./molecules_files/PDBLoader.js"></script>
 
 <div id="container"></div>
 <div id="info"><a href="http://threejs.org/" target="_blank">three.js css3d</a> - molecules</div>
@@ -91,25 +91,7 @@
     <button id="b_b">Bonds</button>
     <button id="b_ab">Atoms + Bonds</button>
 </div>
-<div id="menu">
-    <button>Ethanol</button>
-    <button>Aspirin</button>
-    <button>Caffeine</button>
-    <button>Nicotine</button>
-    <button>LSD</button>
-    <button>Cocaine</button>
-    <button>Cholesterol</button>
-    <button>Lycopene</button>
-    <button>Glucose</button>
-    <button>Aluminium oxide</button>
-    <button>Cubane</button>
-    <button>Copper</button>
-    <button>Fluorite</button>
-    <button>Salt</button>
-    <button>YBCO superconductor</button>
-    <button>Buckyball</button>
-    <button>Graphite</button>
-</div>
+<div id="menu"></div>
 
 <script>
 var camera, scene, renderer;
@@ -175,10 +157,10 @@ function init() {
     controls.rotateSpeed = 0.5;
     controls.addEventListener('change', render);
 
-//    baseSprite.onload = function() {
-//        loadMolecule("./  molecules_files/caffeine.pdb");
-//        createMenu();
-//    };
+    baseSprite.onload = function() {
+        loadMolecule("./molecules_files/caffeine.pdb");
+        createMenu();
+    };
 
     baseSprite.src = './sprites/ball.png';
 
@@ -201,7 +183,7 @@ function createMenu() {
         button.innerHTML = m;
         menu.appendChild(button);
 
-        var url = "./ molecules_files/" + MOLECULES[ m ];
+        var url = "./molecules_files" + "/" + MOLECULES[ m ];
 
         button.addEventListener('click', generateButtonCallback(url), false);
 

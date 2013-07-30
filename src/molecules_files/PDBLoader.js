@@ -222,5 +222,5 @@ THREE.PDBLoader.prototype = {
 
 	}
 
-}
+};
 
