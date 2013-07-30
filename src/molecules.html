@@ -139,19 +139,14 @@ animate();
 function init() {
     camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 5000);
     camera.position.z = 1500;
-
     scene = new THREE.Scene();
 
     root = new THREE.Object3D();
     scene.add(root);
 
-    //
-
     renderer = new THREE.CSS3DRenderer();
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.getElementById('container').appendChild(renderer.domElement);
-
-    //
 
     controls = new THREE.TrackballControls(camera, renderer.domElement);
     controls.rotateSpeed = 0.5;
@@ -161,14 +156,10 @@ function init() {
         loadMolecule("./molecules_files/caffeine.pdb");
         createMenu();
     };
-
     baseSprite.src = './sprites/ball.png';
 
     window.addEventListener('resize', onWindowResize, false);
-
 }
-
-//
 
 function generateButtonCallback(url) {
     return function(event) {
@@ -178,15 +169,12 @@ function generateButtonCallback(url) {
 
 function createMenu() {
     for (var m in MOLECULES) {
-
         var button = document.createElement('button');
         button.innerHTML = m;
         menu.appendChild(button);
 
-        var url = "./molecules_files" + "/" + MOLECULES[ m ];
-
+        var url = "./molecules_files" + "/" + MOLECULES[m];
         button.addEventListener('click', generateButtonCallback(url), false);
-
     }
 
     var b_a = document.getElementById("b_a");
@@ -205,79 +193,50 @@ function createMenu() {
         visualizationType = 2;
         showAtomsBonds()
     });
-
 }
 
-//
-
 function showAtoms() {
-
     for (var i = 0; i < objects.length; i++) {
-
         var object = objects[ i ];
 
         if (object instanceof THREE.CSS3DSprite) {
-
             object.element.style.display = "";
             object.visible = true;
-
         } else {
-
             object.element.style.display = "none";
             object.visible = false;
-
         }
-
     }
-
 }
 
 function showBonds() {
-
     for (var i = 0; i < objects.length; i++) {
-
         var object = objects[ i ];
 
         if (object instanceof THREE.CSS3DSprite) {
-
             object.element.style.display = "none";
             object.visible = false;
-
         } else {
-
             object.element.style.display = "";
             object.element.style.height = object.userData.bondLengthFull;
             object.visible = true;
-
         }
-
     }
-
 }
 
 function showAtomsBonds() {
-
     for (var i = 0; i < objects.length; i++) {
-
         var object = objects[ i ];
 
         object.element.style.display = "";
         object.visible = true;
-
         if (!( object instanceof THREE.CSS3DSprite )) {
-
             object.element.style.height = object.userData.bondLengthShort;
-
         }
-
     }
-
 }
 
-//
-
 function colorify(ctx, width, height, color, a) {
-
     var r = color.r;
     var g = color.g;
     var b = color.b;
@@ -286,31 +245,22 @@ function colorify(ctx, width, height, color, a) {
     var data = imageData.data;
 
     for (var y = 0; y < height; y++) {
-
         for (var x = 0; x < width; x++) {
-
             var index = ( y * width + x ) * 4;
-
             data[ index ] *= r;
             data[ index + 1 ] *= g;
             data[ index + 2 ] *= b;
             data[ index + 3 ] *= a;
-
         }
-
     }
-
     ctx.putImageData(imageData, 0, 0);
-
 }
 
 function imageToCanvas(image) {
-
     var width = image.width;
     var height = image.height;
 
     var canvas = document.createElement('canvas');
-
     canvas.width = width;
     canvas.height = height;
 
@@ -318,35 +268,25 @@ function imageToCanvas(image) {
     context.drawImage(image, 0, 0, width, height);
 
     return canvas;
-
 }
 
-//
-
 function loadMolecule(url) {
-
     for (var i = 0; i < objects.length; i++) {
-
-        var object = objects[ i ];
+        var object = objects[i];
         object.parent.remove(object);
-
     }
-
     objects = [];
 
     loader.load(url, function(geometry, geometryBonds) {
-
         var offset = THREE.GeometryUtils.center(geometry);
         geometryBonds.applyMatrix(new THREE.Matrix4().makeTranslation(offset.x, offset.y, offset.z));
 
         for (var i = 0; i < geometry.vertices.length; i++) {
-
             var position = geometry.vertices[ i ];
             var color = geometry.colors[ i ];
             var element = geometry.elements[ i ];
 
             if (!colorSpriteMap[ element ]) {
-
                 var canvas = imageToCanvas(baseSprite);
                 var context = canvas.getContext('2d');
 
@@ -355,7 +295,6 @@ function loadMolecule(url) {
                 var dataUrl = canvas.toDataURL();
 
                 colorSpriteMap[ element ] = dataUrl;
-
             }
 
             colorSprite = colorSpriteMap[ element ];
@@ -366,18 +305,15 @@ function loadMolecule(url) {
             var object = new THREE.CSS3DSprite(atom);
             object.position.copy(position);
             object.position.multiplyScalar(75);
-
             object.matrixAutoUpdate = false;
             object.updateMatrix();
 
             root.add(object);
 
             objects.push(object);
-
         }
 
         for (var i = 0; i < geometryBonds.vertices.length; i += 2) {
-
             var start = geometryBonds.vertices[ i ];
             var end = geometryBonds.vertices[ i + 1 ];
 
@@ -386,9 +322,6 @@ function loadMolecule(url) {
 
             tmpVec1.subVectors(end, start);
             var bondLength = tmpVec1.length() - 50;
-
-
-            //
 
             var bond = document.createElement('div');
             bond.className = "bond";
@@ -401,8 +334,6 @@ function loadMolecule(url) {
             object.userData.bondLengthShort = bondLength + "px";
             object.userData.bondLengthFull = ( bondLength + 55 ) + "px";
 
-            //
-
             var axis = tmpVec2.set(0, 1, 0).cross(tmpVec1);
             var radians = Math.acos(tmpVec3.set(0, 1, 0).dot(tmpVec4.copy(tmpVec1).normalize()));
 
@@ -414,10 +345,8 @@ function loadMolecule(url) {
             object.updateMatrix();
 
             root.add(object);
-
             objects.push(object);
 
-            //
 
             var bond = document.createElement('div');
             bond.className = "bond";
@@ -448,13 +377,11 @@ function loadMolecule(url) {
             root.add(joint);
 
             objects.push(object);
-
         }
 
         //console.log( "CSS3DObjects:", objects.length );
 
         switch (visualizationType) {
-
             case 0:
                 showAtoms();
                 break;
@@ -464,51 +391,34 @@ function loadMolecule(url) {
             case 2:
                 showAtomsBonds();
                 break;
-
         }
 
         render();
-
     });
-
-
 }
 
-//
-
 function onWindowResize() {
-
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
-
     renderer.setSize(window.innerWidth, window.innerHeight);
-
     render();
-
 }
 
 function animate() {
-
     requestAnimationFrame(animate);
     controls.update();
 
     var time = Date.now() * 0.0004;
-
     root.rotation.x = time;
     root.rotation.y = time * 0.7;
 
     render();
-
 }
 
 function render() {
-
     renderer.render(scene, camera);
-
 }
 
 </script>
-
-
 </body>
 </html>
