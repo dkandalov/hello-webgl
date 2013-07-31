@@ -119,18 +119,17 @@
             }
         }
 
-        var iMax = WIDTH / 5;
-        for (var i = 0; i < iMax; i++) {
+        for (var i = 0; i < WIDTH / 5; i++) {
             emit(Math.random() * WIDTH, HEIGHT);
         }
 
         for (var i = WIDTH; i < SIZE; i++) {
             var i4 = i * 4;
-            var pixel = buffer2[i] = ((buffer1[i - 1] + buffer1[i + 1]) * .235) + (buffer1[i + WIDTH] * turbulence[(i + count) % SIZE]);
-
-            image.data[ i4 ] = Math.min(255, pixel << 3);
-            image.data[ i4 + 1 ] = Math.min(255, pixel);
-            image.data[ i4 + 2 ] = Math.min(255, pixel >> 1);
+            var pixel = ((buffer1[i - 1] + buffer1[i + 1]) * .235) + (buffer1[i + WIDTH] * turbulence[(i + count) % SIZE]);
+            buffer2[i] = pixel;
+            image.data[i4] = Math.min(255, pixel << 3);
+            image.data[i4 + 1] = Math.min(255, pixel);
+            image.data[i4 + 2] = Math.min(255, pixel >> 1);
         }
 
         buffer1 = buffer2.slice(0);
