@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<!-- saved from url=(0052)http://threejs.org/examples/canvas_ascii_effect.html -->
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>three.js - ASCII Effect</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <style>
+        body {
+            font-family: Monospace,serif;
+            background-color: #f0f0f0;
+            margin: 0px;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+<script src="../script/three.js"></script>
+<script style="display:none">
+    <!--
+    THREE.TrackballControls = function(object, domElement) {
+        var _this = this;
+        var STATE = {NONE: -1, ROTATE: 0, ZOOM: 1, PAN: 2, TOUCH_ROTATE: 3, TOUCH_ZOOM: 4, TOUCH_PAN: 5};
+        this.object = object;
+        this.domElement = (domElement !== undefined) ? domElement : document;
+        this.enabled = true;
+        this.screen = {left: 0, top: 0, width: 0, height: 0};
+        this.rotateSpeed = 1.0;
+        this.zoomSpeed = 1.2;
+        this.panSpeed = 0.3;
+        this.noRotate = false;
+        this.noZoom = false;
+        this.noPan = false;
+        this.noRoll = false;
+        this.staticMoving = false;
+        this.dynamicDampingFactor = 0.2;
+        this.minDistance = 0;
+        this.maxDistance = Infinity;
+        this.keys = [65, 83, 68];
+        this.target = new THREE.Vector3();
+        var lastPosition = new THREE.Vector3();
+        var _state = STATE.NONE, _prevState = STATE.NONE, _eye = new THREE.Vector3(), _rotateStart = new THREE.Vector3(), _rotateEnd = new THREE.Vector3(), _zoomStart = new THREE.Vector2(), _zoomEnd = new THREE.Vector2(), _touchZoomDistanceStart = 0, _touchZoomDistanceEnd = 0, _panStart = new THREE.Vector2(), _panEnd = new THREE.Vector2();
+        this.target0 = this.target.clone();
+        this.position0 = this.object.position.clone();
+        this.up0 = this.object.up.clone();
+        var changeEvent = {type: 'change'};
+        this.handleResize = function() {
+            if (this.domElement === document) {
+                this.screen.left = 0;
+                this.screen.top = 0;
+                this.screen.width = window.innerWidth;
+                this.screen.height = window.innerHeight;
+            } else {
+                this.screen = this.domElement.getBoundingClientRect();
+            }
+        };
+        this.handleEvent = function(event) {
+            if (typeof this[event.type] == 'function') {
+                this[event.type](event);
+            }
+        };
+        this.getMouseOnScreen = function(clientX, clientY) {
+            return new THREE.Vector2((clientX - _this.screen.left) / _this.screen.width, (clientY - _this.screen.top) / _this.screen.height);
+        };
+        this.getMouseProjectionOnBall = function(clientX, clientY) {
+            var mouseOnBall = new THREE.Vector3((clientX - _this.screen.width * 0.5 - _this.screen.left) / (_this.screen.width * .5), (_this.screen.height * 0.5 + _this.screen.top - clientY) / (_this.screen.height * .5), 0.0);
+            var length = mouseOnBall.length();
+            if (_this.noRoll) {
+                if (length < Math.SQRT1_2) {
+                    mouseOnBall.z = Math.sqrt(1.0 - length * length);
+                } else {
+                    mouseOnBall.z = .5 / length;
+                }
+            } else if (length > 1.0) {
+                mouseOnBall.normalize();
+            } else {
+                mouseOnBall.z = Math.sqrt(1.0 - length * length);
+            }
+            _eye.copy(_this.object.position).sub(_this.target);
+            var projection = _this.object.up.clone().setLength(mouseOnBall.y);
+            projection.add(_this.object.up.clone().cross(_eye).setLength(mouseOnBall.x));
+            projection.add(_eye.setLength(mouseOnBall.z));
+            return projection;
+        };
+        this.rotateCamera = function() {
+            var angle = Math.acos(_rotateStart.dot(_rotateEnd) / _rotateStart.length() / _rotateEnd.length());
+            if (angle) {
+                var axis = (new THREE.Vector3()).crossVectors(_rotateStart, _rotateEnd).normalize(), quaternion = new THREE.Quaternion();
+                angle *= _this.rotateSpeed;
+                quaternion.setFromAxisAngle(axis, -angle);
+                _eye.applyQuaternion(quaternion);
+                _this.object.up.applyQuaternion(quaternion);
+                _rotateEnd.applyQuaternion(quaternion);
+                if (_this.staticMoving) {
+                    _rotateStart.copy(_rotateEnd);
+                } else {
+                    quaternion.setFromAxisAngle(axis, angle * (_this.dynamicDampingFactor - 1.0));
+                    _rotateStart.applyQuaternion(quaternion);
+                }
+            }
+        };
+        this.zoomCamera = function() {
+            if (_state === STATE.TOUCH_ZOOM) {
+                var factor = _touchZoomDistanceStart / _touchZoomDistanceEnd;
+                _touchZoomDistanceStart = _touchZoomDistanceEnd;
+                _eye.multiplyScalar(factor);
+            } else {
+                var factor = 1.0 + (_zoomEnd.y - _zoomStart.y) * _this.zoomSpeed;
+                if (factor !== 1.0 && factor > 0.0) {
+                    _eye.multiplyScalar(factor);
+                    if (_this.staticMoving) {
+                        _zoomStart.copy(_zoomEnd);
+                    } else {
+                        _zoomStart.y += (_zoomEnd.y - _zoomStart.y) * this.dynamicDampingFactor;
+                    }
+                }
+            }
+        };
+        this.panCamera = function() {
+            var mouseChange = _panEnd.clone().sub(_panStart);
+            if (mouseChange.lengthSq()) {
+                mouseChange.multiplyScalar(_eye.length() * _this.panSpeed);
+                var pan = _eye.clone().cross(_this.object.up).setLength(mouseChange.x);
+                pan.add(_this.object.up.clone().setLength(mouseChange.y));
+                _this.object.position.add(pan);
+                _this.target.add(pan);
+                if (_this.staticMoving) {
+                    _panStart = _panEnd;
+                } else {
+                    _panStart.add(mouseChange.subVectors(_panEnd, _panStart).multiplyScalar(_this.dynamicDampingFactor));
+                }
+            }
+        };
+        this.checkDistances = function() {
+            if (!_this.noZoom || !_this.noPan) {
+                if (_eye.lengthSq() > _this.maxDistance * _this.maxDistance) {
+                    _this.object.position.addVectors(_this.target, _eye.setLength(_this.maxDistance));
+                }
+                if (_eye.lengthSq() < _this.minDistance * _this.minDistance) {
+                    _this.object.position.addVectors(_this.target, _eye.setLength(_this.minDistance));
+                }
+            }
+        };
+        this.update = function() {
+            _eye.subVectors(_this.object.position, _this.target);
+            if (!_this.noRotate) {
+                _this.rotateCamera();
+            }
+            if (!_this.noZoom) {
+                _this.zoomCamera();
+            }
+            if (!_this.noPan) {
+                _this.panCamera();
+            }
+            _this.object.position.addVectors(_this.target, _eye);
+            _this.checkDistances();
+            _this.object.lookAt(_this.target);
+            if (lastPosition.distanceToSquared(_this.object.position) > 0) {
+                _this.dispatchEvent(changeEvent);
+                lastPosition.copy(_this.object.position);
+            }
+        };
+        this.reset = function() {
+            _state = STATE.NONE;
+            _prevState = STATE.NONE;
+            _this.target.copy(_this.target0);
+            _this.object.position.copy(_this.position0);
+            _this.object.up.copy(_this.up0);
+            _eye.subVectors(_this.object.position, _this.target);
+            _this.object.lookAt(_this.target);
+            _this.dispatchEvent(changeEvent);
+            lastPosition.copy(_this.object.position);
+        };
+        function keydown(event) {
+            if (_this.enabled === false)return;
+            window.removeEventListener('keydown', keydown);
+            _prevState = _state;
+            if (_state !== STATE.NONE) {
+                return;
+            } else if (event.keyCode === _this.keys[STATE.ROTATE] && !_this.noRotate) {
+                _state = STATE.ROTATE;
+            } else if (event.keyCode === _this.keys[STATE.ZOOM] && !_this.noZoom) {
+                _state = STATE.ZOOM;
+            } else if (event.keyCode === _this.keys[STATE.PAN] && !_this.noPan) {
+                _state = STATE.PAN;
+            }
+        }
+
+        function keyup(event) {
+            if (_this.enabled === false)return;
+            _state = _prevState;
+            window.addEventListener('keydown', keydown, false);
+        }
+
+        function mousedown(event) {
+            if (_this.enabled === false)return;
+            event.preventDefault();
+            event.stopPropagation();
+            if (_state === STATE.NONE) {
+                _state = event.button;
+            }
+            if (_state === STATE.ROTATE && !_this.noRotate) {
+                _rotateStart = _this.getMouseProjectionOnBall(event.clientX, event.clientY);
+                _rotateEnd.copy(_rotateStart)
+            } else if (_state === STATE.ZOOM && !_this.noZoom) {
+                _zoomStart = _this.getMouseOnScreen(event.clientX, event.clientY);
+                _zoomEnd.copy(_zoomStart);
+            } else if (_state === STATE.PAN && !_this.noPan) {
+                _panStart = _this.getMouseOnScreen(event.clientX, event.clientY);
+                _panEnd.copy(_panStart)
+            }
+            document.addEventListener('mousemove', mousemove, false);
+            document.addEventListener('mouseup', mouseup, false);
+        }
+
+        function mousemove(event) {
+            if (_this.enabled === false)return;
+            event.preventDefault();
+            event.stopPropagation();
+            if (_state === STATE.ROTATE && !_this.noRotate) {
+                _rotateEnd = _this.getMouseProjectionOnBall(event.clientX, event.clientY);
+            } else if (_state === STATE.ZOOM && !_this.noZoom) {
+                _zoomEnd = _this.getMouseOnScreen(event.clientX, event.clientY);
+            } else if (_state === STATE.PAN && !_this.noPan) {
+                _panEnd = _this.getMouseOnScreen(event.clientX, event.clientY);
+            }
+        }
+
+        function mouseup(event) {
+            if (_this.enabled === false)return;
+            event.preventDefault();
+            event.stopPropagation();
+            _state = STATE.NONE;
+            document.removeEventListener('mousemove', mousemove);
+            document.removeEventListener('mouseup', mouseup);
+        }
+
+        function mousewheel(event) {
+            if (_this.enabled === false)return;
+            event.preventDefault();
+            event.stopPropagation();
+            var delta = 0;
+            if (event.wheelDelta) {
+                delta = event.wheelDelta / 40;
+            } else if (event.detail) {
+                delta = -event.detail / 3;
+            }
+            _zoomStart.y += delta * 0.01;
+        }
+
+        function touchstart(event) {
+            if (_this.enabled === false)return;
+            switch (event.touches.length) {
+                case 1:
+                    _state = STATE.TOUCH_ROTATE;
+                    _rotateStart = _rotateEnd = _this.getMouseProjectionOnBall(event.touches[0].pageX, event.touches[0].pageY);
+                    break;
+                case 2:
+                    _state = STATE.TOUCH_ZOOM;
+                    var dx = event.touches[0].pageX - event.touches[1].pageX;
+                    var dy = event.touches[0].pageY - event.touches[1].pageY;
+                    _touchZoomDistanceEnd = _touchZoomDistanceStart = Math.sqrt(dx * dx + dy * dy);
+                    break;
+                case 3:
+                    _state = STATE.TOUCH_PAN;
+                    _panStart = _panEnd = _this.getMouseOnScreen(event.touches[0].pageX, event.touches[0].pageY);
+                    break;
+                default:
+                    _state = STATE.NONE;
+            }
+        }
+
+        function touchmove(event) {
+            if (_this.enabled === false)return;
+            event.preventDefault();
+            event.stopPropagation();
+            switch (event.touches.length) {
+                case 1:
+                    _rotateEnd = _this.getMouseProjectionOnBall(event.touches[0].pageX, event.touches[0].pageY);
+                    break;
+                case 2:
+                    var dx = event.touches[0].pageX - event.touches[1].pageX;
+                    var dy = event.touches[0].pageY - event.touches[1].pageY;
+                    _touchZoomDistanceEnd = Math.sqrt(dx * dx + dy * dy)
+                    break;
+                case 3:
+                    _panEnd = _this.getMouseOnScreen(event.touches[0].pageX, event.touches[0].pageY);
+                    break;
+                default:
+                    _state = STATE.NONE;
+            }
+        }
+
+        function touchend(event) {
+            if (_this.enabled === false)return;
+            switch (event.touches.length) {
+                case 1:
+                    _rotateStart = _rotateEnd = _this.getMouseProjectionOnBall(event.touches[0].pageX, event.touches[0].pageY);
+                    break;
+                case 2:
+                    _touchZoomDistanceStart = _touchZoomDistanceEnd = 0;
+                    break;
+                case 3:
+                    _panStart = _panEnd = _this.getMouseOnScreen(event.touches[0].pageX, event.touches[0].pageY);
+                    break;
+            }
+            _state = STATE.NONE;
+        }
+
+        this.domElement.addEventListener('contextmenu', function(event) {
+            event.preventDefault();
+        }, false);
+        this.domElement.addEventListener('mousedown', mousedown, false);
+        this.domElement.addEventListener('mousewheel', mousewheel, false);
+        this.domElement.addEventListener('DOMMouseScroll', mousewheel, false);
+        this.domElement.addEventListener('touchstart', touchstart, false);
+        this.domElement.addEventListener('touchend', touchend, false);
+        this.domElement.addEventListener('touchmove', touchmove, false);
+        window.addEventListener('keydown', keydown, false);
+        window.addEventListener('keyup', keyup, false);
+        this.handleResize();
+    };
+    THREE.TrackballControls.prototype = Object.create(THREE.EventDispatcher.prototype);
+    //-->
+</script>
+<script style="display:none">
+    <!--
+    THREE.AsciiEffect = function(renderer, charSet, options) {
+        charSet = (charSet === undefined) ? ' .:-=+*#%@' : charSet;
+        if (!options)options = {};
+        var bResolution = !options['resolution'] ? 0.15 : options['resolution'];
+        var iScale = !options['scale'] ? 1 : options['scale'];
+        var bColor = !options['color'] ? false : options['color'];
+        var bAlpha = !options['alpha'] ? false : options['alpha'];
+        var bBlock = !options['block'] ? false : options['block'];
+        var bInvert = !options['invert'] ? false : options['invert'];
+        var strResolution = 'low';
+        var width, height;
+        var domElement = document.createElement('div');
+        domElement.style.cursor = 'default';
+        var oAscii = document.createElement("table");
+        domElement.appendChild(oAscii);
+        var iWidth, iHeight;
+        var oImg;
+        this.setSize = function(w, h) {
+            width = w;
+            height = h;
+            renderer.setSize(w, h);
+            initAsciiSize();
+        };
+        this.render = function(scene, camera) {
+            renderer.render(scene, camera);
+            asciifyImage(renderer, oAscii);
+        };
+        this.domElement = domElement;
+        function initAsciiSize() {
+            iWidth = Math.round(width * fResolution);
+            iHeight = Math.round(height * fResolution);
+            oCanvas.width = iWidth;
+            oCanvas.height = iHeight;
+            oImg = renderer.domElement;
+            if (oImg.style.backgroundColor) {
+                oAscii.rows[0].cells[0].style.backgroundColor = oImg.style.backgroundColor;
+                oAscii.rows[0].cells[0].style.color = oImg.style.color;
+            }
+            oAscii.cellSpacing = 0;
+            oAscii.cellPadding = 0;
+            var oStyle = oAscii.style;
+            oStyle.display = "inline";
+            oStyle.width = Math.round(iWidth / fResolution * iScale) + "px";
+            oStyle.height = Math.round(iHeight / fResolution * iScale) + "px";
+            oStyle.whiteSpace = "pre";
+            oStyle.margin = "0px";
+            oStyle.padding = "0px";
+            oStyle.letterSpacing = fLetterSpacing + "px";
+            oStyle.fontFamily = strFont;
+            oStyle.fontSize = fFontSize + "px";
+            oStyle.lineHeight = fLineHeight + "px";
+            oStyle.textAlign = "left";
+            oStyle.textDecoration = "none";
+        }
+
+        var aDefaultCharList = (" .,:;i1tfLCG08@").split("");
+        var aDefaultColorCharList = (" CGO08@").split("");
+        var strFont = "courier new, monospace";
+        var oCanvasImg = renderer.domElement;
+        var oCanvas = document.createElement("canvas");
+        if (!oCanvas.getContext) {
+            return;
+        }
+        var oCtx = oCanvas.getContext("2d");
+        if (!oCtx.getImageData) {
+            return;
+        }
+        var aCharList = (bColor ? aDefaultColorCharList : aDefaultCharList);
+        if (charSet)aCharList = charSet;
+        var fResolution = 0.5;
+        switch (strResolution) {
+            case "low":
+                fResolution = 0.25;
+                break;
+            case "medium":
+                fResolution = 0.5;
+                break;
+            case "high":
+                fResolution = 1;
+                break;
+        }
+        if (bResolution)fResolution = bResolution;
+        var fFontSize = (2 / fResolution) * iScale;
+        var fLineHeight = (2 / fResolution) * iScale;
+        var fLetterSpacing = 0;
+        if (strResolution == "low") {
+            switch (iScale) {
+                case 1:
+                    fLetterSpacing = -1;
+                    break;
+                case 2:
+                case 3:
+                    fLetterSpacing = -2.1;
+                    break;
+                case 4:
+                    fLetterSpacing = -3.1;
+                    break;
+                case 5:
+                    fLetterSpacing = -4.15;
+                    break;
+            }
+        }
+        if (strResolution == "medium") {
+            switch (iScale) {
+                case 1:
+                    fLetterSpacing = 0;
+                    break;
+                case 2:
+                    fLetterSpacing = -1;
+                    break;
+                case 3:
+                    fLetterSpacing = -1.04;
+                    break;
+                case 4:
+                case 5:
+                    fLetterSpacing = -2.1;
+                    break;
+            }
+        }
+        if (strResolution == "high") {
+            switch (iScale) {
+                case 1:
+                case 2:
+                    fLetterSpacing = 0;
+                    break;
+                case 3:
+                case 4:
+                case 5:
+                    fLetterSpacing = -1;
+                    break;
+            }
+        }
+        function asciifyImage(canvasRenderer, oAscii) {
+            oCtx.clearRect(0, 0, iWidth, iHeight);
+            oCtx.drawImage(oCanvasImg, 0, 0, iWidth, iHeight);
+            var oImgData = oCtx.getImageData(0, 0, iWidth, iHeight).data;
+            var strChars = "";
+            for (var y = 0; y < iHeight; y += 2) {
+                for (var x = 0; x < iWidth; x++) {
+                    var iOffset = (y * iWidth + x) * 4;
+                    var iRed = oImgData[iOffset];
+                    var iGreen = oImgData[iOffset + 1];
+                    var iBlue = oImgData[iOffset + 2];
+                    var iAlpha = oImgData[iOffset + 3];
+                    var iCharIdx;
+                    var fBrightness;
+                    fBrightness = (0.3 * iRed + 0.59 * iGreen + 0.11 * iBlue) / 255;
+                    if (iAlpha == 0) {
+                        fBrightness = 1;
+                    }
+                    iCharIdx = Math.floor((1 - fBrightness) * (aCharList.length - 1));
+                    if (bInvert) {
+                        iCharIdx = aCharList.length - iCharIdx - 1;
+                    }
+                    var strThisChar = aCharList[iCharIdx];
+                    if (strThisChar === undefined || strThisChar == " ")
+                        strThisChar = "&nbsp;";
+                    if (bColor) {
+                        strChars += "<span style='"
+                                + "color:rgb(" + iRed + "," + iGreen + "," + iBlue + ");"
+                                + (bBlock ? "background-color:rgb(" + iRed + "," + iGreen + "," + iBlue + ");" : "")
+                                + (bAlpha ? "opacity:" + (iAlpha / 255) + ";" : "")
+                                + "'>" + strThisChar + "</span>";
+                    } else {
+                        strChars += strThisChar;
+                    }
+                }
+                strChars += "<br/>";
+            }
+            oAscii.innerHTML = "<tr><td>" + strChars + "</td></tr>";
+        }
+    };
+    //-->
+</script>
+<script src="../script/stats.min.js"></script>
+<script>
+
+    var container, stats;
+
+    var camera, controls, scene, renderer;
+
+    var sphere, plane;
+
+    var start = Date.now();
+
+    init();
+    animate();
+
+    function init() {
+
+        var width = window.innerWidth || 2;
+        var height = window.innerHeight || 2;
+
+        container = document.createElement('div');
+        document.body.appendChild(container);
+
+        var info = document.createElement('div');
+        info.style.position = 'absolute';
+        info.style.top = '10px';
+        info.style.width = '100%';
+        info.style.textAlign = 'center';
+        info.innerHTML = 'Drag to change the view';
+        container.appendChild(info);
+
+        camera = new THREE.PerspectiveCamera(70, width / height, 1, 1000);
+        camera.position.y = 150;
+        camera.position.z = 500;
+
+        controls = new THREE.TrackballControls(camera);
+
+        scene = new THREE.Scene();
+
+        var light = new THREE.PointLight(0xffffff);
+        light.position.set(500, 500, 500);
+        scene.add(light);
+
+        var light = new THREE.PointLight(0xffffff, 0.25);
+        light.position.set(-500, -500, -500);
+        scene.add(light);
+
+        sphere = new THREE.Mesh(new THREE.SphereGeometry(200, 20, 10), new THREE.MeshLambertMaterial({ shading: THREE.FlatShading }));
+        scene.add(sphere);
+
+        // Plane
+
+        plane = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), new THREE.MeshBasicMaterial({ color: 0xe0e0e0 }));
+        plane.position.y = -200;
+        plane.rotation.x = -Math.PI / 2;
+        scene.add(plane);
+
+        renderer = new THREE.CanvasRenderer();
+        renderer.setSize(width, height);
+        // container.appendChild( renderer.domElement );
+
+        effect = new THREE.AsciiEffect(renderer);
+        effect.setSize(width, height);
+        container.appendChild(effect.domElement);
+
+        stats = new Stats();
+        stats.domElement.style.position = 'absolute';
+        stats.domElement.style.top = '0px';
+        container.appendChild(stats.domElement);
+
+        //
+
+        window.addEventListener('resize', onWindowResize, false);
+
+    }
+
+    function onWindowResize() {
+
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        effect.setSize(window.innerWidth, window.innerHeight);
+
+    }
+
+    //
+
+    function animate() {
+
+        requestAnimationFrame(animate);
+
+        render();
+        stats.update();
+
+    }
+
+    function render() {
+
+        var timer = Date.now() - start;
+
+        sphere.position.y = Math.abs(Math.sin(timer * 0.002)) * 150;
+        sphere.rotation.x = timer * 0.0003;
+        sphere.rotation.z = timer * 0.0002;
+
+        controls.update();
+
+        effect.render(scene, camera);
+
+    }
+
+</script>
+</body>
+</html>
