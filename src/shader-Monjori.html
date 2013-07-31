@@ -62,32 +62,28 @@
         float g = 1.0 / 40.0;
         float width = 400.0;
 
-        float e = width * (position.x * 0.5 + 0.5);
-        float f = width * (position.y * 0.5 + 0.5);
-        float i = width / 2.0;   // + sin(e * g + scaledTime / 150.0) * 20.0;
-        float d = width / 2.0;   // + cos(f * g / 2.0) * 18.0 + cos(e * g) * 7.0;
+        float x = width * (position.x * 0.5 + 0.5);
+        float y = width * (position.y * 0.5 + 0.5);
+        float length = sqrt(pow(width / 2.0 - x, 2.0) + pow(width / 2.0 - y, 2.0));
+        float lengthScaled = length / 350.0;
+        float q = y / length;
 
-        float r = sqrt(pow(i - e, 2.0) + pow(d - f, 2.0));
-        float q = f / r;
-
-        e = r * cos(q) - scaledTime / 2.0;
-        f = r * sin(q) - scaledTime / 2.0;
-        d = sin(e * g) * 176.0 + sin(e * g) * 164.0 + r;
-        float h = ((f + d) + scaledTime / 2.0) * g;
-        i = cos(h + r * position.x / 1.3) * (e + e + scaledTime) + cos(q * g * 6.0) * (r + h / 3.0);
+        float e = length * cos(q) - scaledTime / 2.0;
+        float f = length * sin(q) - scaledTime / 2.0;
+        float h = ((f + sin(e * g) * 340.0 + length) + scaledTime / 2.0) * g;
+        float i = cos(h + length * position.x / 1.3) * (e + e + scaledTime) + cos(q * g * 6.0) * (length + h / 3.0);
         h = sin(f * g) * 144.0 - sin(e * g) * 212.0 * position.x;
-        h = (h + (f - e) * q + sin(r - (scaledTime+ h) / 7.0) * 10.0 + i / 4.0) * g;
-        i += cos(h * 2.3 * sin(scaledTime/ 350.0 - q)) * 184.0 * sin(q - (r * 4.3 + scaledTime / 12.0) * g) + tan(r * g + h) * 184.0 * cos(r * g + h);
+        h = (h + (f - e) * q + sin(length - (scaledTime + h) / 7.0) * 10.0 + i / 4.0) * g;
+        i += cos(h * 2.3 * sin(scaledTime/ 350.0 - q)) * 184.0 * sin(q - (length * 4.3 + scaledTime / 12.0) * g) + tan(length * g + h) * 184.0 * cos(length * g + h);
         i = mod(i / 5.6, 256.0) / 64.0;
         if (i < 0.0) i += 4.0;
         if (i >= 2.0) i = 4.0 - i;
-        d = r / 350.0;
-        d += sin(d * d * 8.0) * 0.52;
+        lengthScaled += sin(lengthScaled * lengthScaled * 8.0) * 0.52;
         f = (sin(scaledTime * g) + 1.0) / 2.0;
 
         gl_FragColor = vec4(
-            vec3(f * i / 1.6, i / 2.0 + d / 13.0, i) * d * position.x +
-            vec3(i / 1.3 + d / 8.0, i / 2.0 + d / 18.0, i) * d * (1.0 - position.x),
+            vec3(f * i / 1.6, i / 2.0 + lengthScaled / 13.0, i) * lengthScaled * position.x +
+            vec3(i / 1.3 + lengthScaled / 8.0, i / 2.0 + lengthScaled / 18.0, i) * lengthScaled * (1.0 - position.x),
             1.0
         );
     }
