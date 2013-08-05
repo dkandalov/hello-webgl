@@ -327,7 +327,7 @@
 <script style="display:none">
     <!--
     THREE.AsciiEffect = function(renderer, charSet, options) {
-        charSet = (charSet === undefined) ? ' .:-=+*#%@' : charSet;
+        charSet = (charSet === undefined) ? ' .:-=+*#%&' : charSet;
         if (!options)options = {};
         var bResolution = !options['resolution'] ? 0.15 : options['resolution'];
         var iScale = !options['scale'] ? 1 : options['scale'];
@@ -502,20 +502,16 @@
 </script>
 <script src="../script/stats.min.js"></script>
 <script>
-
     var container, stats;
-
     var camera, controls, scene, renderer;
-
     var sphere, plane;
-
     var start = Date.now();
+    var effect;
 
     init();
     animate();
 
     function init() {
-
         var width = window.innerWidth || 2;
         var height = window.innerHeight || 2;
 
@@ -542,7 +538,7 @@
         light.position.set(500, 500, 500);
         scene.add(light);
 
-        var light = new THREE.PointLight(0xffffff, 0.25);
+        light = new THREE.PointLight(0xffffff, 0.25);
         light.position.set(-500, -500, -500);
         scene.add(light);
 
@@ -550,7 +546,6 @@
         scene.add(sphere);
 
         // Plane
-
         plane = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), new THREE.MeshBasicMaterial({ color: 0xe0e0e0 }));
         plane.position.y = -200;
         plane.rotation.x = -Math.PI / 2;
@@ -569,35 +564,24 @@
         stats.domElement.style.top = '0px';
         container.appendChild(stats.domElement);
 
-        //
-
         window.addEventListener('resize', onWindowResize, false);
-
     }
 
     function onWindowResize() {
-
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
 
         renderer.setSize(window.innerWidth, window.innerHeight);
         effect.setSize(window.innerWidth, window.innerHeight);
-
     }
 
-    //
-
     function animate() {
-
         requestAnimationFrame(animate);
-
         render();
         stats.update();
-
     }
 
     function render() {
-
         var timer = Date.now() - start;
 
         sphere.position.y = Math.abs(Math.sin(timer * 0.002)) * 150;
@@ -607,9 +591,7 @@
         controls.update();
 
         effect.render(scene, camera);
-
     }
-
 </script>
 </body>
 </html>
