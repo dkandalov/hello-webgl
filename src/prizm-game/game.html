@@ -37,6 +37,7 @@
 <script src="../../script/three.js"></script>
 <script src="../../script/Detector.js"></script>
 <script src="../../script/stats.min.js"></script>
+<script src="../../script/OBJLoader.js"></script>
 
 <script>
     var directionLeft = -1;
@@ -117,8 +118,6 @@
         var oldOnKeyDown = document.onkeydown;
         document.onkeydown = function(e) {
             e = window.event || e;
-            console.log(String.fromCharCode(e.keyCode))
-            console.log(e.keyCode)
             if (String.fromCharCode(e.keyCode) == settings.keyUp) {
                 player.speedUp = player.speed;
             }
@@ -130,7 +129,7 @@
                 if (bullet != null) bullet.shoot(player.x + player.size * player.direction, player.y, settings.direction);
             }
             if (oldOnKeyDown != null) oldOnKeyDown(e);
-        }
+        };
         var oldOnKeyUp = document.onkeyup;
         document.onkeyup = function(e) {
             e = window.event || e;
@@ -141,7 +140,7 @@
                 player.speedDown = 0;
             }
             if (oldOnKeyUp != null) oldOnKeyUp(e);
-        }
+        };
     }
 
     Player.prototype.takeBullet = function() {
@@ -283,6 +282,23 @@
         }
     };
 
+    function PlayerView(scene, direction) {
+        this.mesh = null;
+
+        var playerView = this;
+        var loader = new THREE.OBJLoader(new THREE.LoadingManager());
+        loader.load("./swallowv2.obj", function (object) {
+            object.position.x = 0;
+            object.position.y = -80;
+            object.scale = new THREE.Vector3(20, 20, 20);
+            object.rotation.y = direction * Math.PI / 2;
+            scene.add(object);
+
+            playerView.mesh = object;
+        });
+
+    }
+
     if (!Detector.webgl) Detector.addGetWebGLMessage();
 
     var container, stats;
@@ -294,6 +310,8 @@
     var windowHalfY = window.innerHeight / 2;
 
     var player1Mesh, bulletsMesh1;
+    var player1View;
+    var player2View;
     var player2Mesh, bulletsMesh2;
     var bricksMesh;
 
@@ -320,10 +338,9 @@
 
         game = new Game();
 
-        var loader = new THREE.JSONLoader();
-        loader.load("../../script/cubecolors.json", createPlayer1);
+        player1View = new PlayerView(scene, directionLeft);
         player1 = new Player({
-            x: game.fieldRight - 1000,
+            x: game.fieldRight - 1200,
             y: 0,
             direction: directionLeft,
             keyUp: "I", keyDown: "K", keyShoot: "J",
@@ -332,9 +349,9 @@
         bulletsMesh1 = createBulletsMesh(5);
         bulletsMesh1.forEach(function(it) { scene.add(it); });
 
-        loader.load("../../script/cube_fvc.json", createScene2);
+        player2View = new PlayerView(scene, directionRight);
         player2 = new Player({
-            x: game.fieldLeft + 1000,
+            x: game.fieldLeft + 1200,
             y: 0,
             direction: directionRight,
             keyUp: "W", keyDown: "S", keyShoot: "D",
@@ -394,28 +411,6 @@
         }
         return result;
     }
-    function createPlayer1(geometry, materials) {
-        materials[0].shading = THREE.FlatShading;
-
-        player1Mesh = new THREE.Object3D();
-        player1Mesh.position.x = 400;
-        player1Mesh.scale.x = player1Mesh.scale.y = player1Mesh.scale.z = 250;
-
-        scene.add(player1Mesh);
-
-        var part1 = new THREE.Mesh(geometry, new THREE.MeshFaceMaterial(materials));
-        player1Mesh.add(part1);
-
-        var part2 = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({
-            color: 0xffffff,
-            opacity: 0.9,
-            shading: THREE.FlatShading,
-            wireframe: true,
-            wireframeLinewidth: 2,
-            transparent: true
-        }));
-        player1Mesh.add(part2);
-    }
 
     function createScene2(geometry, materials) {
         materials[0].shading = THREE.FlatShading;
@@ -434,8 +429,8 @@
     function animate() {
         requestAnimationFrame(animate);
 
-        if (player1Mesh != null) player1.update(player1Mesh, bulletsMesh1, game);
-        if (player2Mesh != null) player2.update(player2Mesh, bulletsMesh2, game);
+        if (player1View.mesh != null) player1.update(player1View.mesh, bulletsMesh1, game);
+        if (player2View.mesh != null) player2.update(player2View.mesh, bulletsMesh2, game);
 
         for (var i = 0; i < bricks.length; i++) {
             bricks[i].update(bricksMesh[i]);
