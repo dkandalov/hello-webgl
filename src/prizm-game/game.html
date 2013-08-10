@@ -203,6 +203,63 @@
         return result;
     };
 
+    function Background(scene) {
+        this.lines = [];
+
+        var r = 1050;
+        var i, line, vertex2, material;
+        var parameters = [
+            [ 0.25, 0xff7700, 0.01,      0.1 ],
+            [ 0.5,  0xff9900, 0.01,      0.1 ],
+            [ 0.75, 0xffaa00, 0.01,      0.1 ],
+            [ 1,    0xffaa00, 0.01,      0.1 ],
+            [ 1.25, 0x000833, 0.01,      0.1 ],
+            [ 3.0,  0xaaaaaa, 0.01,      0.1 ],
+            [ 3.5,  0xffffff, 0.01,      0.1 ],
+            [ 4.5,  0xffffff, 0.01,      0.1 ],
+            [ 5.5,  0xffffff, 0.01,      0.1 ]
+        ];
+        var geometry = new THREE.Geometry();
+
+        for (i = 0; i < 500; i++) {
+            var vertex1 = new THREE.Vector3();
+            vertex1.x = Math.random() * 2 - 1;
+            vertex1.y = Math.random() * 2 - 1;
+            vertex1.z = Math.random() * 2 - 1;
+            vertex1.normalize();
+            vertex1.multiplyScalar(r);
+
+            vertex2 = vertex1.clone();
+            vertex2.multiplyScalar(Math.random() * 0.09 + 1);
+
+            geometry.vertices.push(vertex1);
+            geometry.vertices.push(vertex2);
+        }
+
+        for (i = 0; i < parameters.length; ++i) {
+            var p = parameters[i];
+
+            material = new THREE.LineBasicMaterial({ color: p[1] * 0.01, opacity: p[ 2 ], linewidth: p[ 3 ] });
+
+            line = new THREE.Line(geometry, material, THREE.LinePieces);
+            line.scale.x = line.scale.y = line.scale.z = p[0];
+            line.originalScale = p[0];
+            line.rotation.y = Math.random() * Math.PI;
+            line.updateMatrix();
+
+            this.lines.push(line);
+            scene.add(line);
+        }
+    }
+
+    Background.prototype.update = function(time) {
+        time = time * 0.0001;
+        for (var i = 0; i < this.lines.length; i++) {
+            var line = this.lines[i];
+            line.rotation.y = time * ( i < 4 ? ( i + 1 ) : -( i + 1 ) );
+            if (i < 5) line.scale.x = line.scale.y = line.scale.z = line.originalScale * (i / 5 + 1) * (1 + 0.5 * Math.sin(7 * time) );
+        }
+    };
 
     if (!Detector.webgl) Detector.addGetWebGLMessage();
 
@@ -222,6 +279,7 @@
     var player1;
     var player2;
     var bricks = [];
+    var background;
 
     init();
     animate();
@@ -270,6 +328,8 @@
         game.bricks = bricks;
         game.players = [player1, player2];
         game.bullets = [].concat(player1.bullets, player2.bullets);
+
+        background = new Background(scene);
 
         renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
@@ -358,6 +418,8 @@
         for (var i = 0; i < bricks.length; i++) {
             bricks[i].update(bricksMesh[i]);
         }
+
+        background.update(Date.now())
 
         render();
         stats.update();
