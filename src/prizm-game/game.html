@@ -39,46 +39,111 @@
 <script src="../../script/stats.min.js"></script>
 
 <script>
-    function Player() {
-        this.x = 5000;
+    var directionLeft = -1;
+    var directionRight = 1;
+
+    function Bullet() {
+        this.x = 0;
         this.y = 0;
+        this.visible = false;
+        this.direction = 0;
+        this.speed = 100;
+    }
+
+    Bullet.prototype.shoot = function(x, y, direction) {
+        this.visible = true;
+        this.x = x;
+        this.y = y;
+        this.direction = direction;
+    };
+
+    Bullet.prototype.update = function(game) {
+        if (!this.visible) return;
+
+        this.x += this.speed * this.direction;
+        if (this.x < game.fieldLeft) {
+            this.visible = false;
+        }
+        if (this.x > game.fieldRight) {
+            this.visible = false;
+        }
+    };
+
+    function Player(settings) {
+        this.x = settings.x;
+        this.y = settings.y;
         this.targetX = this.x;
         this.targetY = this.y;
         this.speed = 50;
+        this.bullets = [new Bullet(), new Bullet()];
+        this.direction = settings.direction;
 
         var that = this;
+        var oldCallback = document.onkeypress;
         document.onkeypress = function(e) {
             e = window.event || e;
-            if (String.fromCharCode(e.charCode) == "w") {
+            if (String.fromCharCode(e.charCode) == settings.keyUp) {
                 that.targetY = that.y + 500;
             }
-            if (String.fromCharCode(e.charCode) == "s") {
+            if (String.fromCharCode(e.charCode) == settings.keyDown) {
                 that.targetY = that.y - 500;
             }
+            if (String.fromCharCode(e.charCode) == settings.keyShoot) {
+                var bullet = that.takeBullet();
+                console.log(bullet)
+                if (bullet != null) bullet.shoot(that.x, that.y, settings.direction);
+            }
+
+            if (oldCallback != null) oldCallback(e);
         }
     }
 
-    Player.prototype.update = function(mesh) {
+    Player.prototype.takeBullet = function() {
+        for (var i = 0; i < this.bullets.length; i++) {
+            var bullet = this.bullets[i];
+            if (!bullet.visible) return bullet;
+        }
+        return null;
+    };
+
+    Player.prototype.update = function(mesh, bulletsMesh, game) {
         if (this.targetY != this.y) {
             if (this.targetY < this.y) this.y -= this.speed;
             if (this.targetY > this.y) this.y += this.speed;
         }
+        this.bullets.forEach(function(it) { it.update(game); });
+
         mesh.position.x = this.x;
         mesh.position.y = this.y;
+        for (var i = 0; i < this.bullets.length; i++) {
+            bulletsMesh[i].visible = this.bullets[i].visible;
+            bulletsMesh[i].position.x = this.bullets[i].x;
+            bulletsMesh[i].position.y = this.bullets[i].y;
+        }
     };
+
+    function Game() {
+        this.fieldLeft = -6000;
+        this.fieldRight = 6000;
+    }
 
 
     if (!Detector.webgl) Detector.addGetWebGLMessage();
 
     var container, stats;
     var camera, scene, renderer;
-    var mesh1, mesh2, mesh3, light;
+    var mesh3, light;
     var mouseX = 0, mouseY = 0;
 
     var windowHalfX = window.innerWidth / 2;
     var windowHalfY = window.innerHeight / 2;
 
+    var player1Mesh, bulletsMesh1;
+    var player2Mesh, bulletsMesh2;
+
+    var game;
     var player1;
+    var player2;
 
     init();
     animate();
@@ -95,11 +160,29 @@
         light.position.set(0, 0, 1).normalize();
         scene.add(light);
 
-        var loader = new THREE.JSONLoader();
-        loader.load("../../script/cubecolors.json", createScene1);
-        loader.load("../../script/cube_fvc.json", createScene2);
+        game = new Game();
 
-        player1 = new Player();
+        var loader = new THREE.JSONLoader();
+        loader.load("../../script/cubecolors.json", createPlayer1);
+        bulletsMesh1 = createBulletsMesh();
+        player1 = new Player({
+            "x": game.fieldRight - 1000,
+            "y": 0,
+            "direction": directionLeft,
+            "keyUp": "i", "keyDown": "k", "keyShoot": "j"
+        });
+
+        loader.load("../../script/cube_fvc.json", createScene2);
+        player2 = new Player({
+            "x": game.fieldLeft + 1000,
+            "y": 0,
+            "direction": directionRight,
+            "keyUp": "w", "keyDown": "s", "keyShoot": "d"
+        });
+        bulletsMesh2 = createBulletsMesh();
+
+        bulletsMesh1.forEach(function(it) { scene.add(it); });
+        bulletsMesh2.forEach(function(it) { scene.add(it); });
 
         renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
@@ -124,16 +207,24 @@
         renderer.setSize(window.innerWidth, window.innerHeight);
     }
 
-    function createScene1(geometry, materials) {
+    function createBulletsMesh() {
+        return [null, null].map(function() {
+            var geometry = new THREE.CubeGeometry(100, 100, 100);
+            var material = new THREE.MeshNormalMaterial();
+            return new THREE.Mesh(geometry, material);
+        });
+    }
+    function createPlayer1(geometry, materials) {
         materials[0].shading = THREE.FlatShading;
 
-        mesh1 = new THREE.Object3D();
-        mesh1.position.x = 400;
-        mesh1.scale.x = mesh1.scale.y = mesh1.scale.z = 250;
-        scene.add(mesh1);
+        player1Mesh = new THREE.Object3D();
+        player1Mesh.position.x = 400;
+        player1Mesh.scale.x = player1Mesh.scale.y = player1Mesh.scale.z = 250;
+
+        scene.add(player1Mesh);
 
         var part1 = new THREE.Mesh(geometry, new THREE.MeshFaceMaterial(materials));
-        mesh1.add(part1);
+        player1Mesh.add(part1);
 
         var part2 = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({
             color: 0xffffff,
@@ -143,16 +234,16 @@
             wireframeLinewidth: 2,
             transparent: true
         }));
-        mesh1.add(part2);
+        player1Mesh.add(part2);
     }
 
     function createScene2(geometry, materials) {
         materials[0].shading = THREE.FlatShading;
 
-        mesh2 = new THREE.Mesh(geometry, new THREE.MeshFaceMaterial(materials));
-        mesh2.position.x = -400;
-        mesh2.scale.x = mesh2.scale.y = mesh2.scale.z = 250;
-        scene.add(mesh2);
+        player2Mesh = new THREE.Mesh(geometry, new THREE.MeshFaceMaterial(materials));
+        player2Mesh.position.x = -400;
+        player2Mesh.scale.x = player2Mesh.scale.y = player2Mesh.scale.z = 250;
+        scene.add(player2Mesh);
     }
 
     function onDocumentMouseMove(event) {
@@ -163,7 +254,8 @@
     function animate() {
         requestAnimationFrame(animate);
 
-        if (mesh1 != null) player1.update(mesh1);
+        if (player1Mesh != null) player1.update(player1Mesh, bulletsMesh1, game);
+        if (player2Mesh != null) player2.update(player2Mesh, bulletsMesh2, game);
 
         render();
         stats.update();
@@ -174,18 +266,16 @@
         camera.position.y += (-mouseY - camera.position.y) * 0.05;
 
         camera.lookAt(scene.position);
-/*
 
-        if (mesh) {
-            mesh.rotation.x += 0.01;
-            mesh.rotation.y += 0.01;
+/*        if (player1Mesh) {
+            player1Mesh.rotation.x += 0.01;
+            player1Mesh.rotation.y += 0.01;
         }
 
-        if (mesh2) {
-            mesh2.rotation.x += 0.01;
-            mesh2.rotation.y += 0.01;
-        }
-*/
+        if (player2Mesh) {
+            player2Mesh.rotation.x += 0.01;
+            player2Mesh.rotation.y += 0.01;
+        }*/
 
         renderer.render(scene, camera);
     }
