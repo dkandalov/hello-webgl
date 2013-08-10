@@ -122,10 +122,37 @@
         }
     };
 
+    function Brick(settings) {
+        this.x = settings.x;
+        this.y = settings.y;
+        this.visible = true;
+    }
+
+    Brick.prototype.update = function(mesh) {
+        mesh.visible = this.visible;
+        mesh.position.x = this.x;
+        mesh.position.y = this.y;
+    };
+
     function Game() {
         this.fieldLeft = -6000;
         this.fieldRight = 6000;
     }
+
+    Game.prototype.createBricksField = function(rowCount, colCount) {
+        var left = -1200;
+        var top = -3000;
+        var result = [];
+        for (var row = 0; row < rowCount; row++) {
+            for (var col = 0; col < colCount; col++) {
+                result.push(new Brick({
+                    x: left + row * 400,
+                    y: top + col * 400
+                }));
+            }
+        }
+        return result;
+    };
 
 
     if (!Detector.webgl) Detector.addGetWebGLMessage();
@@ -140,10 +167,12 @@
 
     var player1Mesh, bulletsMesh1;
     var player2Mesh, bulletsMesh2;
+    var bricksMesh;
 
     var game;
     var player1;
     var player2;
+    var bricks = [];
 
     init();
     animate();
@@ -164,25 +193,28 @@
 
         var loader = new THREE.JSONLoader();
         loader.load("../../script/cubecolors.json", createPlayer1);
-        bulletsMesh1 = createBulletsMesh();
         player1 = new Player({
-            "x": game.fieldRight - 1000,
-            "y": 0,
-            "direction": directionLeft,
-            "keyUp": "i", "keyDown": "k", "keyShoot": "j"
+            x: game.fieldRight - 1000,
+            y: 0,
+            direction: directionLeft,
+            keyUp: "i", keyDown: "k", keyShoot: "j"
         });
+        bulletsMesh1 = createBulletsMesh(2);
+        bulletsMesh1.forEach(function(it) { scene.add(it); });
 
         loader.load("../../script/cube_fvc.json", createScene2);
         player2 = new Player({
-            "x": game.fieldLeft + 1000,
-            "y": 0,
-            "direction": directionRight,
-            "keyUp": "w", "keyDown": "s", "keyShoot": "d"
+            x: game.fieldLeft + 1000,
+            y: 0,
+            direction: directionRight,
+            keyUp: "w", keyDown: "s", keyShoot: "d"
         });
-        bulletsMesh2 = createBulletsMesh();
-
-        bulletsMesh1.forEach(function(it) { scene.add(it); });
+        bulletsMesh2 = createBulletsMesh(2);
         bulletsMesh2.forEach(function(it) { scene.add(it); });
+
+        bricks = game.createBricksField(6, 20);
+        bricksMesh = createBricksMesh(120);
+        bricksMesh.forEach(function(it) { scene.add(it); });
 
         renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
@@ -207,12 +239,23 @@
         renderer.setSize(window.innerWidth, window.innerHeight);
     }
 
-    function createBulletsMesh() {
-        return [null, null].map(function() {
+    function createBulletsMesh(size) {
+        var result = [];
+        for (var i = 0; i < size; i++) {
             var geometry = new THREE.CubeGeometry(100, 100, 100);
             var material = new THREE.MeshNormalMaterial();
-            return new THREE.Mesh(geometry, material);
-        });
+            result.push(new THREE.Mesh(geometry, material));
+        }
+        return result;
+    }
+    function createBricksMesh(size) {
+        var result = [];
+        for (var i = 0; i < size; i++) {
+            var geometry = new THREE.CubeGeometry(200, 200, 200);
+            var material = new THREE.MeshNormalMaterial();
+            result.push(new THREE.Mesh(geometry, material));
+        }
+        return result;
     }
     function createPlayer1(geometry, materials) {
         materials[0].shading = THREE.FlatShading;
@@ -256,6 +299,10 @@
 
         if (player1Mesh != null) player1.update(player1Mesh, bulletsMesh1, game);
         if (player2Mesh != null) player2.update(player2Mesh, bulletsMesh2, game);
+
+        for (var i = 0; i < bricks.length; i++) {
+            bricks[i].update(bricksMesh[i]);
+        }
 
         render();
         stats.update();
