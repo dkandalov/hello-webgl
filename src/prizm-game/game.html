@@ -103,7 +103,10 @@
         this.y = settings.y;
         this.targetX = this.x;
         this.targetY = this.y;
+        this.xRotation = 0;
+        this.targetXRotation = 0;
         this.speed = 50;
+        this.rotationSpeed = 0.1;
         this.speedUp = 0;
         this.speedDown = 0;
         this.direction = settings.direction;
@@ -120,9 +123,11 @@
             e = window.event || e;
             if (String.fromCharCode(e.keyCode) == settings.keyUp) {
                 player.speedUp = player.speed;
+                player.targetXRotation = Math.PI / 4;
             }
             if (String.fromCharCode(e.keyCode) == settings.keyDown) {
                 player.speedDown = player.speed;
+                player.targetXRotation = -Math.PI / 4;
             }
             if (String.fromCharCode(e.keyCode) == settings.keyShoot) {
                 var bullet = player.takeBullet();
@@ -135,9 +140,11 @@
             e = window.event || e;
             if (String.fromCharCode(e.keyCode) == settings.keyUp) {
                 player.speedUp = 0;
+                player.targetXRotation = 0;
             }
             if (String.fromCharCode(e.keyCode) == settings.keyDown) {
                 player.speedDown = 0;
+                player.targetXRotation = 0;
             }
             if (oldOnKeyUp != null) oldOnKeyUp(e);
         };
@@ -164,6 +171,10 @@
             if (this.targetX < this.x) this.x -= this.speed;
             if (this.targetX > this.x) this.x += this.speed;
         }
+        if (this.targetXRotation != this.xRotation) {
+            if (this.targetXRotation < this.xRotation) this.xRotation -= this.rotationSpeed;
+            if (this.targetXRotation > this.xRotation) this.xRotation += this.rotationSpeed;
+        }
         if (this.speedUp != 0) {
             this.y += this.speedUp;
             this.targetY = this.y;
@@ -176,6 +187,7 @@
 
         mesh.position.x = this.x;
         mesh.position.y = this.y;
+        mesh.rotation.x = this.xRotation;
         for (var i = 0; i < this.bullets.length; i++) {
             bulletsMesh[i].visible = this.bullets[i].visible;
             bulletsMesh[i].position.x = this.bullets[i].x;
@@ -410,15 +422,6 @@
             result.push(new THREE.Mesh(geometry, material));
         }
         return result;
-    }
-
-    function createScene2(geometry, materials) {
-        materials[0].shading = THREE.FlatShading;
-
-        player2Mesh = new THREE.Mesh(geometry, new THREE.MeshFaceMaterial(materials));
-        player2Mesh.position.x = -400;
-        player2Mesh.scale.x = player2Mesh.scale.y = player2Mesh.scale.z = 250;
-        scene.add(player2Mesh);
     }
 
     function onDocumentMouseMove(event) {
