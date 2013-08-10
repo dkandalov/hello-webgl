@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <!-- saved from url=(0062)http://threejs.org/examples/webgl_geometry_colors_blender.html -->
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<script src="../../script/bmi.js" language="javascript"></script><title>three.js webgl - io blender - vertex colors</title>
+<script src="../../script/bmi.js" language="javascript"></script>
+    <title></title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <style>
@@ -192,6 +193,8 @@
             this.y -= this.speedDown;
             this.targetY = this.y;
         }
+        if (this.y <= game.fieldTop) this.y = game.fieldTop;
+        if (this.y >= game.fieldBottom) this.y = game.fieldBottom;
         this.bullets.forEach(function(it) { it.update(game); });
 
         mesh.position.x = this.x;
@@ -223,6 +226,8 @@
     function Game() {
         this.fieldLeft = -6000;
         this.fieldRight = 6000;
+        this.fieldTop = -3000;
+        this.fieldBottom = 3000;
         this.bricks = [];
         this.players = [];
         this.bullets = [];
@@ -321,8 +326,8 @@
     function BulletView(scene) {
         this.light = new THREE.PointLight(0xffffff, 3, 800);
 
-        var geometry = new THREE.CubeGeometry(100, 100, 100);
-        var material = new THREE.MeshNormalMaterial();
+        var geometry = new THREE.SphereGeometry(50, 5, 5);
+        var material = new THREE.MeshBasicMaterial();
         this.mesh = new THREE.Mesh(geometry, material);
 
         scene.add(this.mesh);
@@ -448,15 +453,6 @@
         composer.reset();
     }
 
-    function createBulletsLights(size) {
-        var result = [];
-        for (var i = 0; i < size; i++) {
-            var pointLight = new THREE.PointLight(0xffffff, 2, 800);
-            result.push(pointLight);
-        }
-        return result;
-    }
-
     function createBulletsViews(scene, size) {
         var result = [];
         for (var i = 0; i < size; i++) {
@@ -467,16 +463,21 @@
 
     function createBricksMesh(size) {
         var shininess = 115, specular = 0xffffff, bumpScale = 1, shading = THREE.SmoothShading;
-        var imgTexture = THREE.ImageUtils.loadTexture( "./moon_1024.jpg" );
-        imgTexture.wrapS = imgTexture.wrapT = THREE.RepeatWrapping;
-        imgTexture.anisotropy = 16;
+        var moonTexture = THREE.ImageUtils.loadTexture("./moon_1024.jpg");
+        moonTexture.wrapS = moonTexture.wrapT = THREE.RepeatWrapping;
+        moonTexture.anisotropy = 16;
+        var lavaTexture = THREE.ImageUtils.loadTexture("./lavatile.jpg");
+        lavaTexture.wrapS = lavaTexture.wrapT = THREE.RepeatWrapping;
+        lavaTexture.anisotropy = 16;
 
         var result = [];
         for (var i = 0; i < size; i++) {
+            var texture = Math.random() < 0.5 ? moonTexture : lavaTexture;
+
             var geometry = new THREE.SphereGeometry(150, 10, 10);
             var material = new THREE.MeshPhongMaterial({
-                map: imgTexture,
-                bumpMap: imgTexture,
+                map: texture,
+                bumpMap: texture,
                 bumpScale: bumpScale,
                 color: 0xccaaff,
                 ambient: 0x777777,
