@@ -171,7 +171,7 @@
         this.targetX = this.x - 200 * this.direction;
     };
 
-    Player.prototype.update = function(mesh, bulletsMesh, game) {
+    Player.prototype.update = function(mesh, bulletViews, game) {
         if (this.targetY != this.y) {
             if (this.targetY < this.y) this.y -= this.speed;
             if (this.targetY > this.y) this.y += this.speed;
@@ -198,9 +198,8 @@
         mesh.position.y = this.y;
         mesh.rotation.x = this.xRotation;
         for (var i = 0; i < this.bullets.length; i++) {
-            bulletsMesh[i].visible = this.bullets[i].visible;
-            bulletsMesh[i].position.x = this.bullets[i].x;
-            bulletsMesh[i].position.y = this.bullets[i].y;
+            bulletViews[i].setVisible(this.bullets[i].visible);
+            bulletViews[i].setPosition(this.bullets[i].x, this.bullets[i].y);
         }
     };
 
@@ -317,23 +316,45 @@
 
             playerView.mesh = object;
         });
-
     }
+
+    function BulletView(scene) {
+        this.light = new THREE.PointLight(0xffffff, 3, 800);
+
+        var geometry = new THREE.CubeGeometry(100, 100, 100);
+        var material = new THREE.MeshNormalMaterial();
+        this.mesh = new THREE.Mesh(geometry, material);
+
+        scene.add(this.mesh);
+        scene.add(this.light);
+    }
+
+    BulletView.prototype.setVisible = function(value) {
+        this.mesh.visible = value;
+        this.light.visible = value;
+    };
+
+    BulletView.prototype.setPosition = function(x, y) {
+        this.mesh.position.x = x;
+        this.mesh.position.y = y;
+        this.light.position.x = x;
+        this.light.position.y = y;
+    };
 
     if (!Detector.webgl) Detector.addGetWebGLMessage();
 
     var container, stats;
     var camera, scene, renderer, composer;
-    var mesh3, light;
+    var mesh3, pointLight;
     var mouseX = 0, mouseY = 0;
 
     var windowHalfX = window.innerWidth / 2;
     var windowHalfY = window.innerHeight / 2;
 
-    var player1Mesh, bulletsMesh1;
+    var player1Mesh, bulletsViews1;
     var player1View;
     var player2View;
-    var player2Mesh, bulletsMesh2;
+    var player2Mesh, bulletsViews2;
     var bricksMesh;
 
     var game;
@@ -353,8 +374,8 @@
 
         scene = new THREE.Scene();
 
-        light = new THREE.DirectionalLight(0xffffff);
-        light.position.set(0, 0, 1).normalize();
+        var light = new THREE.DirectionalLight(0xffffff);
+        light.position.set(0.5, 1, 1).normalize();
         scene.add(light);
 
         game = new Game();
@@ -367,8 +388,7 @@
             keyUp: "I", keyDown: "K", keyShoot: "J",
             amountOfBullets: 5
         });
-        bulletsMesh1 = createBulletsMesh(5);
-        bulletsMesh1.forEach(function(it) { scene.add(it); });
+        bulletsViews1 = createBulletsViews(scene, 5);
 
         player2View = new PlayerView(scene, directionRight);
         player2 = new Player({
@@ -378,8 +398,7 @@
             keyUp: "W", keyDown: "S", keyShoot: "D",
             amountOfBullets: 5
         });
-        bulletsMesh2 = createBulletsMesh(5);
-        bulletsMesh2.forEach(function(it) { scene.add(it); });
+        bulletsViews2 = createBulletsViews(scene, 5);
 
         bricks = game.createBricksField(6, 20);
         bricksMesh = createBricksMesh(120);
@@ -415,7 +434,6 @@
         composer.addPass(new THREE.RenderPass(scene, camera));
         composer.addPass(effectFXAA);
         composer.addPass(effectCopy);
-
     }
 
     function onWindowResize() {
@@ -430,20 +448,43 @@
         composer.reset();
     }
 
-    function createBulletsMesh(size) {
+    function createBulletsLights(size) {
         var result = [];
         for (var i = 0; i < size; i++) {
-            var geometry = new THREE.CubeGeometry(100, 100, 100);
-            var material = new THREE.MeshNormalMaterial();
-            result.push(new THREE.Mesh(geometry, material));
+            var pointLight = new THREE.PointLight(0xffffff, 2, 800);
+            result.push(pointLight);
         }
         return result;
     }
-    function createBricksMesh(size) {
+
+    function createBulletsViews(scene, size) {
         var result = [];
         for (var i = 0; i < size; i++) {
-            var geometry = new THREE.CubeGeometry(200, 200, 200);
-            var material = new THREE.MeshNormalMaterial();
+            result.push(new BulletView(scene));
+        }
+        return result;
+    }
+
+    function createBricksMesh(size) {
+        var shininess = 115, specular = 0xffffff, bumpScale = 1, shading = THREE.SmoothShading;
+        var imgTexture = THREE.ImageUtils.loadTexture( "./moon_1024.jpg" );
+        imgTexture.wrapS = imgTexture.wrapT = THREE.RepeatWrapping;
+        imgTexture.anisotropy = 16;
+
+        var result = [];
+        for (var i = 0; i < size; i++) {
+            var geometry = new THREE.SphereGeometry(150, 10, 10);
+            var material = new THREE.MeshPhongMaterial({
+                map: imgTexture,
+                bumpMap: imgTexture,
+                bumpScale: bumpScale,
+                color: 0xccaaff,
+                ambient: 0x777777,
+                specular: specular,
+                shininess: shininess,
+                shading: shading
+            });
+
             var mesh = new THREE.Mesh(geometry, material);
             mesh.rotation.x += Math.random();
             mesh.rotation.y += Math.random();
@@ -460,8 +501,8 @@
     function animate() {
         requestAnimationFrame(animate);
 
-        if (player1View.mesh != null) player1.update(player1View.mesh, bulletsMesh1, game);
-        if (player2View.mesh != null) player2.update(player2View.mesh, bulletsMesh2, game);
+        if (player1View.mesh != null) player1.update(player1View.mesh, bulletsViews1, game);
+        if (player2View.mesh != null) player2.update(player2View.mesh, bulletsViews2, game);
 
         for (var i = 0; i < bricks.length; i++) {
             bricks[i].update(bricksMesh[i]);
