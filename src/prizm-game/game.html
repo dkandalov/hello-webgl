@@ -39,6 +39,15 @@
 <script src="../../script/stats.min.js"></script>
 <script src="../../script/OBJLoader.js"></script>
 
+<script src="../lines-cubes-colors_files/ConvolutionShader.js"></script>
+<script src="../lines-cubes-colors_files/CopyShader.js"></script>
+<script src="../lines-cubes-colors_files/FXAAShader.js"></script>
+
+<script src="../lines-cubes-colors_files/EffectComposer.js"></script>
+<script src="../lines-cubes-colors_files/MaskPass.js"></script>
+<script src="../lines-cubes-colors_files/RenderPass.js"></script>
+<script src="../lines-cubes-colors_files/ShaderPass.js"></script>
+
 <script>
     var directionLeft = -1;
     var directionRight = 1;
@@ -314,7 +323,7 @@
     if (!Detector.webgl) Detector.addGetWebGLMessage();
 
     var container, stats;
-    var camera, scene, renderer;
+    var camera, scene, renderer, composer;
     var mesh3, light;
     var mouseX = 0, mouseY = 0;
 
@@ -393,6 +402,20 @@
         container.appendChild(stats.domElement);
 
         window.addEventListener('resize', onWindowResize, false);
+
+        var effectFXAA = new THREE.ShaderPass(THREE.FXAAShader);
+        var width = window.innerWidth || 2;
+        var height = window.innerHeight || 2;
+        effectFXAA.uniforms['resolution'].value.set(1 / width, 1 / height);
+
+        var effectCopy = new THREE.ShaderPass(THREE.CopyShader);
+        effectCopy.renderToScreen = true;
+
+        composer = new THREE.EffectComposer(renderer);
+        composer.addPass(new THREE.RenderPass(scene, camera));
+        composer.addPass(effectFXAA);
+        composer.addPass(effectCopy);
+
     }
 
     function onWindowResize() {
@@ -403,6 +426,8 @@
         camera.updateProjectionMatrix();
 
         renderer.setSize(window.innerWidth, window.innerHeight);
+
+        composer.reset();
     }
 
     function createBulletsMesh(size) {
@@ -419,7 +444,10 @@
         for (var i = 0; i < size; i++) {
             var geometry = new THREE.CubeGeometry(200, 200, 200);
             var material = new THREE.MeshNormalMaterial();
-            result.push(new THREE.Mesh(geometry, material));
+            var mesh = new THREE.Mesh(geometry, material);
+            mesh.rotation.x += Math.random();
+            mesh.rotation.y += Math.random();
+            result.push(mesh);
         }
         return result;
     }
@@ -437,6 +465,8 @@
 
         for (var i = 0; i < bricks.length; i++) {
             bricks[i].update(bricksMesh[i]);
+            bricksMesh[i].rotation.x += Math.random() * 0.01;
+            bricksMesh[i].rotation.y += Math.random() * 0.01;
         }
 
 //        background.update(Date.now()); // TODO enable later
@@ -461,7 +491,8 @@
             player2Mesh.rotation.y += 0.01;
         }*/
 
-        renderer.render(scene, camera);
+        renderer.clear();
+        composer.render();
     }
 
 </script>
