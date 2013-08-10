@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<!-- saved from url=(0062)http://threejs.org/examples/webgl_geometry_colors_blender.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<script src="../../script/bmi.js" language="javascript"></script><title>three.js webgl - io blender - vertex colors</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <style>
+			body {
+				color: #eee;
+				font-family:Monospace,serif;
+				font-size:13px;
+				text-align:center;
+
+				background-color: #000;
+				margin: 0px;
+				padding: 0px;
+				overflow: hidden;
+			}
+
+			#info {
+				position: absolute;
+				top: 0px; width: 100%;
+				padding: 5px;
+			}
+
+			a {
+				color: #0080ff;
+			}
+
+		</style> </head>
+<body>
+<div id="container"><div id="stats" style="width: 80px; opacity: 0.9; cursor: pointer; position: absolute; top: 0px;">
+    <div id="fps" style="padding: 0px 0px 3px 3px; text-align: left; background-color: rgb(0, 0, 34);"><div id="fpsText" style="color: rgb(0, 255, 255); font-family: Helvetica, Arial, sans-serif; font-size: 9px; font-weight: bold; line-height: 15px;">56 FPS (0-60)</div>
+        <div id="fpsGraph" style="position: relative; width: 74px; height: 30px; background-color: rgb(0, 255, 255);">
+</div></div></div></div>
+<!--<div id="info"><a href="http://threejs.org/" target="_blank">three.js</a> webgl - io blender - vertex colors</div>-->
+<script src="../../script/three.js"></script>
+<script src="../../script/Detector.js"></script>
+<script src="../../script/stats.min.js"></script>
+
+<script>
+    function Player() {
+        this.x = 5000;
+        this.y = 0;
+        this.targetX = this.x;
+        this.targetY = this.y;
+        this.speed = 50;
+
+        var that = this;
+        document.onkeypress = function(e) {
+            e = window.event || e;
+            if (String.fromCharCode(e.charCode) == "w") {
+                that.targetY = that.y + 500;
+            }
+            if (String.fromCharCode(e.charCode) == "s") {
+                that.targetY = that.y - 500;
+            }
+        }
+    }
+
+    Player.prototype.update = function(mesh) {
+        if (this.targetY != this.y) {
+            if (this.targetY < this.y) this.y -= this.speed;
+            if (this.targetY > this.y) this.y += this.speed;
+        }
+        mesh.position.x = this.x;
+        mesh.position.y = this.y;
+    };
+
+
+    if (!Detector.webgl) Detector.addGetWebGLMessage();
+
+    var container, stats;
+    var camera, scene, renderer;
+    var mesh1, mesh2, mesh3, light;
+    var mouseX = 0, mouseY = 0;
+
+    var windowHalfX = window.innerWidth / 2;
+    var windowHalfY = window.innerHeight / 2;
+
+    var player1;
+
+    init();
+    animate();
+
+    function init() {
+        container = document.getElementById('container');
+
+        camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 1, 10000);
+        camera.position.z = 9000;
+
+        scene = new THREE.Scene();
+
+        light = new THREE.DirectionalLight(0xffffff);
+        light.position.set(0, 0, 1).normalize();
+        scene.add(light);
+
+        var loader = new THREE.JSONLoader();
+        loader.load("../../script/cubecolors.json", createScene1);
+        loader.load("../../script/cube_fvc.json", createScene2);
+
+        player1 = new Player();
+
+        renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+
+        container.appendChild(renderer.domElement);
+
+        stats = new Stats();
+        stats.domElement.style.position = 'absolute';
+        stats.domElement.style.top = '0px';
+        container.appendChild(stats.domElement);
+
+        window.addEventListener('resize', onWindowResize, false);
+    }
+
+    function onWindowResize() {
+        windowHalfX = window.innerWidth / 2;
+        windowHalfY = window.innerHeight / 2;
+
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    function createScene1(geometry, materials) {
+        materials[0].shading = THREE.FlatShading;
+
+        mesh1 = new THREE.Object3D();
+        mesh1.position.x = 400;
+        mesh1.scale.x = mesh1.scale.y = mesh1.scale.z = 250;
+        scene.add(mesh1);
+
+        var part1 = new THREE.Mesh(geometry, new THREE.MeshFaceMaterial(materials));
+        mesh1.add(part1);
+
+        var part2 = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({
+            color: 0xffffff,
+            opacity: 0.9,
+            shading: THREE.FlatShading,
+            wireframe: true,
+            wireframeLinewidth: 2,
+            transparent: true
+        }));
+        mesh1.add(part2);
+    }
+
+    function createScene2(geometry, materials) {
+        materials[0].shading = THREE.FlatShading;
+
+        mesh2 = new THREE.Mesh(geometry, new THREE.MeshFaceMaterial(materials));
+        mesh2.position.x = -400;
+        mesh2.scale.x = mesh2.scale.y = mesh2.scale.z = 250;
+        scene.add(mesh2);
+    }
+
+    function onDocumentMouseMove(event) {
+        mouseX = event.clientX - windowHalfX;
+        mouseY = event.clientY - windowHalfY;
+    }
+
+    function animate() {
+        requestAnimationFrame(animate);
+
+        if (mesh1 != null) player1.update(mesh1);
+
+        render();
+        stats.update();
+    }
+
+    function render() {
+        camera.position.x += (mouseX - camera.position.x) * 0.05;
+        camera.position.y += (-mouseY - camera.position.y) * 0.05;
+
+        camera.lookAt(scene.position);
+/*
+
+        if (mesh) {
+            mesh.rotation.x += 0.01;
+            mesh.rotation.y += 0.01;
+        }
+
+        if (mesh2) {
+            mesh2.rotation.x += 0.01;
+            mesh2.rotation.y += 0.01;
+        }
+*/
+
+        renderer.render(scene, camera);
+    }
+
+</script>
+<script language="javascript"><!--
+bmi_SafeAddOnload(bmi_load,"bmi_orig_img",0);//-->
+</script></body></html>
