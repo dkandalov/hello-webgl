@@ -103,6 +103,8 @@
         this.targetX = this.x;
         this.targetY = this.y;
         this.speed = 50;
+        this.speedUp = 0;
+        this.speedDown = 0;
         this.direction = settings.direction;
         this.size = 500;
         this.visible = true;
@@ -112,21 +114,33 @@
         }
 
         var player = this;
-        var oldCallback = document.onkeypress;
-        document.onkeypress = function(e) {
+        var oldOnKeyDown = document.onkeydown;
+        document.onkeydown = function(e) {
             e = window.event || e;
-            if (String.fromCharCode(e.charCode) == settings.keyUp) {
-                player.targetY = player.y + 500;
+            console.log(String.fromCharCode(e.keyCode))
+            console.log(e.keyCode)
+            if (String.fromCharCode(e.keyCode) == settings.keyUp) {
+                player.speedUp = player.speed;
             }
-            if (String.fromCharCode(e.charCode) == settings.keyDown) {
-                player.targetY = player.y - 500;
+            if (String.fromCharCode(e.keyCode) == settings.keyDown) {
+                player.speedDown = player.speed;
             }
-            if (String.fromCharCode(e.charCode) == settings.keyShoot) {
+            if (String.fromCharCode(e.keyCode) == settings.keyShoot) {
                 var bullet = player.takeBullet();
                 if (bullet != null) bullet.shoot(player.x + player.size * player.direction, player.y, settings.direction);
             }
-
-            if (oldCallback != null) oldCallback(e);
+            if (oldOnKeyDown != null) oldOnKeyDown(e);
+        }
+        var oldOnKeyUp = document.onkeyup;
+        document.onkeyup = function(e) {
+            e = window.event || e;
+            if (String.fromCharCode(e.keyCode) == settings.keyUp) {
+                player.speedUp = 0;
+            }
+            if (String.fromCharCode(e.keyCode) == settings.keyDown) {
+                player.speedDown = 0;
+            }
+            if (oldOnKeyUp != null) oldOnKeyUp(e);
         }
     }
 
@@ -150,6 +164,14 @@
         if (this.targetX != this.x) {
             if (this.targetX < this.x) this.x -= this.speed;
             if (this.targetX > this.x) this.x += this.speed;
+        }
+        if (this.speedUp != 0) {
+            this.y += this.speedUp;
+            this.targetY = this.y;
+        }
+        if (this.speedDown != 0) {
+            this.y -= this.speedDown;
+            this.targetY = this.y;
         }
         this.bullets.forEach(function(it) { it.update(game); });
 
@@ -304,7 +326,7 @@
             x: game.fieldRight - 1000,
             y: 0,
             direction: directionLeft,
-            keyUp: "i", keyDown: "k", keyShoot: "j",
+            keyUp: "I", keyDown: "K", keyShoot: "J",
             amountOfBullets: 5
         });
         bulletsMesh1 = createBulletsMesh(5);
@@ -315,7 +337,7 @@
             x: game.fieldLeft + 1000,
             y: 0,
             direction: directionRight,
-            keyUp: "w", keyDown: "s", keyShoot: "d",
+            keyUp: "W", keyDown: "S", keyShoot: "D",
             amountOfBullets: 5
         });
         bulletsMesh2 = createBulletsMesh(5);
@@ -329,7 +351,7 @@
         game.players = [player1, player2];
         game.bullets = [].concat(player1.bullets, player2.bullets);
 
-        background = new Background(scene);
+//        background = new Background(scene); // TODO enable later
 
         renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
@@ -419,7 +441,7 @@
             bricks[i].update(bricksMesh[i]);
         }
 
-        background.update(Date.now())
+//        background.update(Date.now()); // TODO enable later
 
         render();
         stats.update();
