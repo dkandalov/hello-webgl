@@ -113,8 +113,12 @@
         this.y = settings.y;
         this.targetX = this.x;
         this.targetY = this.y;
+
         this.xRotation = 0;
         this.targetXRotation = 0;
+        this.zRotation = settings.direction * Math.PI / 2;
+        this.targetZRotation = settings.direction * Math.PI / 2;
+
         this.speed = 50;
         this.rotationSpeed = 0.1;
         this.speedUp = 0;
@@ -185,6 +189,10 @@
             if (this.targetXRotation < this.xRotation) this.xRotation -= this.rotationSpeed;
             if (this.targetXRotation > this.xRotation) this.xRotation += this.rotationSpeed;
         }
+        if (this.targetZRotation != this.zRotation) {
+            if (this.targetZRotation < this.zRotation) this.zRotation -= this.rotationSpeed;
+            if (this.targetZRotation > this.zRotation) this.zRotation += this.rotationSpeed;
+        }
         if (this.speedUp != 0) {
             this.y += this.speedUp;
             this.targetY = this.y;
@@ -200,6 +208,7 @@
         mesh.position.x = this.x;
         mesh.position.y = this.y;
         mesh.rotation.x = this.xRotation;
+        mesh.rotation.y = this.zRotation;
         for (var i = 0; i < this.bullets.length; i++) {
             bulletViews[i].setVisible(this.bullets[i].visible);
             bulletViews[i].setPosition(this.bullets[i].x, this.bullets[i].y);
@@ -413,7 +422,7 @@
         game.players = [player1, player2];
         game.bullets = [].concat(player1.bullets, player2.bullets);
 
-//        background = new Background(scene); // TODO enable later
+        background = new Background(scene); // TODO enable later
 
         renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
@@ -511,7 +520,7 @@
             bricksMesh[i].rotation.y += Math.random() * 0.01;
         }
 
-//        background.update(Date.now()); // TODO enable later
+        background.update(Date.now()); // TODO enable later
 
         render();
         stats.update();
